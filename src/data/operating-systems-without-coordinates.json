@@ -1,0 +1,252 @@
+{
+    "dots": [
+        {
+            "id": 1,
+            "size": 6,
+            "text": "Process Management",
+            "details": "Process management is the core function of an operating system, responsible for creating, scheduling, and...",
+            "fullContent": "Process management is the core function of an operating system, responsible for creating, scheduling, and terminating processes. A process is an instance of a program in execution, consisting of program code, data, and process control block (PCB). The OS manages process states (new, ready, running, waiting, terminated), handles process creation through fork() or similar mechanisms, and manages process termination. Process management enables multitasking, resource sharing, and isolation between different programs running on the system.",
+            "implementations": [
+                "Process Control Block (PCB)",
+                "Process Scheduling",
+                "Context Switching",
+                "Process Creation/Termination"
+            ],
+            "relationships": [
+                "Foundation for Multitasking",
+                "Works with Memory Management",
+                "Integrates with CPU Scheduling",
+                "Basis for Thread Management"
+            ],
+            "parentId": null,
+            "children": [
+                {
+                    "id": 2,
+                    "size": 4,
+                    "text": "CPU Scheduling",
+                    "details": "CPU scheduling determines which process runs when the CPU becomes available. Different scheduling...",
+                    "fullContent": "CPU scheduling determines which process runs when the CPU becomes available. Different scheduling algorithms optimize for different goals: fairness, throughput, response time, or waiting time. Common algorithms include First-Come-First-Served (FCFS), Shortest Job First (SJF), Round Robin, Priority Scheduling, and Multilevel Queue Scheduling. The scheduler must balance between CPU utilization, fairness, and responsiveness. Preemptive scheduling allows the OS to interrupt running processes, while non-preemptive scheduling requires processes to voluntarily release the CPU.",
+                    "implementations": [
+                        "Round Robin",
+                        "Priority Scheduling",
+                        "Shortest Job First",
+                        "Multilevel Queue"
+                    ],
+                    "relationships": [
+                        "Parent: Process Management",
+                        "Works with Process States",
+                        "Affects System Performance"
+                    ],
+                    "parentId": 1
+                },
+                {
+                    "id": 3,
+                    "size": 4,
+                    "text": "Inter-Process Communication",
+                    "details": "Inter-Process Communication (IPC) enables processes to communicate and synchronize with each other...",
+                    "fullContent": "Inter-Process Communication (IPC) enables processes to communicate and synchronize with each other. IPC mechanisms include shared memory, message passing, pipes, sockets, and semaphores. Shared memory allows processes to access the same memory region, providing fast communication but requiring synchronization. Message passing involves sending messages between processes, providing better isolation but potentially slower. Pipes provide unidirectional communication, while sockets enable network-based IPC. IPC is essential for coordinating concurrent processes and building distributed systems.",
+                    "implementations": [
+                        "Shared Memory",
+                        "Message Passing",
+                        "Pipes",
+                        "Sockets",
+                        "Semaphores"
+                    ],
+                    "relationships": [
+                        "Parent: Process Management",
+                        "Used for Synchronization",
+                        "Enables Distributed Systems"
+                    ],
+                    "parentId": 1
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "size": 6,
+            "text": "Memory Management",
+            "details": "Memory management handles the allocation and deallocation of memory to processes. The OS must track...",
+            "fullContent": "Memory management handles the allocation and deallocation of memory to processes. The OS must track which memory is free and which is allocated, allocate memory to processes when needed, and deallocate it when processes terminate. Memory management techniques include paging, segmentation, and virtual memory. The OS must protect memory spaces to prevent processes from accessing each other's memory, and provide mechanisms for memory sharing when needed. Efficient memory management is crucial for system performance and stability.",
+            "implementations": [
+                "Paging",
+                "Segmentation",
+                "Virtual Memory",
+                "Memory Protection"
+            ],
+            "relationships": [
+                "Works with Process Management",
+                "Integrates with Virtual Memory",
+                "Affects System Performance",
+                "Enables Memory Protection"
+            ],
+            "parentId": null,
+            "children": [
+                {
+                    "id": 5,
+                    "size": 4,
+                    "text": "Virtual Memory",
+                    "details": "Virtual memory allows processes to use more memory than physically available by using disk storage...",
+                    "fullContent": "Virtual memory allows processes to use more memory than physically available by using disk storage as an extension of RAM. Each process has its own virtual address space, which is mapped to physical memory through page tables. When a page is not in physical memory, a page fault occurs, and the OS loads it from disk. Virtual memory enables processes to run without knowing the actual physical memory layout, provides memory protection, and allows efficient memory sharing. Common page replacement algorithms include FIFO, LRU, and Optimal.",
+                    "implementations": [
+                        "Paging",
+                        "Page Tables",
+                        "Page Replacement Algorithms",
+                        "TLB (Translation Lookaside Buffer)"
+                    ],
+                    "relationships": [
+                        "Parent: Memory Management",
+                        "Enables Large Address Spaces",
+                        "Works with Paging"
+                    ],
+                    "parentId": 4
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "size": 6,
+            "text": "File Systems",
+            "details": "File systems organize and manage data storage on secondary storage devices. They provide a logical...",
+            "fullContent": "File systems organize and manage data storage on secondary storage devices. They provide a logical view of storage, abstracting away physical disk details. File systems manage files (collections of data), directories (collections of files), and metadata (file attributes, permissions, timestamps). They handle file creation, deletion, reading, writing, and provide access control. Different file systems (ext4, NTFS, FAT32, ZFS) offer different features like journaling, compression, snapshots, and encryption. File systems must ensure data integrity, handle disk failures, and provide efficient access patterns.",
+            "implementations": [
+                "ext4",
+                "NTFS",
+                "FAT32",
+                "ZFS",
+                "Btrfs"
+            ],
+            "relationships": [
+                "Manages Secondary Storage",
+                "Works with I/O Management",
+                "Provides Data Persistence",
+                "Integrates with Security"
+            ],
+            "parentId": null
+        },
+        {
+            "id": 7,
+            "size": 6,
+            "text": "I/O Management",
+            "details": "I/O management handles communication between the CPU and peripheral devices. The OS must manage...",
+            "fullContent": "I/O management handles communication between the CPU and peripheral devices. The OS must manage device drivers, handle interrupts, buffer data, and schedule I/O operations efficiently. I/O can be blocking (process waits) or non-blocking (process continues), and can use polling, interrupts, or DMA (Direct Memory Access). Device drivers provide an abstraction layer between hardware and the OS, translating high-level I/O requests into device-specific commands. I/O scheduling algorithms optimize disk access patterns to minimize seek time and maximize throughput.",
+            "implementations": [
+                "Device Drivers",
+                "Interrupt Handlers",
+                "DMA",
+                "I/O Scheduling",
+                "Buffering"
+            ],
+            "relationships": [
+                "Manages Hardware Devices",
+                "Works with File Systems",
+                "Affects System Performance",
+                "Integrates with Interrupts"
+            ],
+            "parentId": null
+        },
+        {
+            "id": 8,
+            "size": 6,
+            "text": "Synchronization",
+            "details": "Synchronization mechanisms coordinate access to shared resources among concurrent processes or threads...",
+            "fullContent": "Synchronization mechanisms coordinate access to shared resources among concurrent processes or threads to prevent race conditions and ensure data consistency. Critical sections are code segments that access shared resources and must be executed atomically. Synchronization primitives include mutexes (mutual exclusion locks), semaphores, monitors, and condition variables. Deadlocks occur when processes are waiting for resources held by each other. Synchronization must balance between correctness (preventing race conditions) and performance (avoiding unnecessary blocking).",
+            "implementations": [
+                "Mutexes",
+                "Semaphores",
+                "Monitors",
+                "Condition Variables",
+                "Atomic Operations"
+            ],
+            "relationships": [
+                "Prevents Race Conditions",
+                "Works with Process Management",
+                "Related to Deadlocks",
+                "Essential for Concurrency"
+            ],
+            "parentId": null,
+            "children": [
+                {
+                    "id": 9,
+                    "size": 4,
+                    "text": "Deadlocks",
+                    "details": "Deadlocks occur when two or more processes are blocked forever, each waiting for a resource held by...",
+                    "fullContent": "Deadlocks occur when two or more processes are blocked forever, each waiting for a resource held by another process in the set. Four conditions must hold simultaneously for a deadlock: mutual exclusion, hold and wait, no preemption, and circular wait. Deadlock prevention breaks one of these conditions, deadlock avoidance uses algorithms like Banker's algorithm to ensure safe states, and deadlock detection identifies and recovers from deadlocks. Deadlock recovery may involve process termination or resource preemption. Understanding deadlocks is crucial for designing robust concurrent systems.",
+                    "implementations": [
+                        "Deadlock Prevention",
+                        "Deadlock Avoidance",
+                        "Deadlock Detection",
+                        "Deadlock Recovery"
+                    ],
+                    "relationships": [
+                        "Parent: Synchronization",
+                        "Related to Resource Management",
+                        "Critical for System Stability"
+                    ],
+                    "parentId": 8
+                }
+            ]
+        },
+        {
+            "id": 10,
+            "size": 6,
+            "text": "Thread Management",
+            "details": "Threads are lightweight processes that share the same address space. A process can contain multiple...",
+            "fullContent": "Threads are lightweight processes that share the same address space. A process can contain multiple threads, each with its own stack and registers but sharing code, data, and file descriptors. Threads enable concurrent execution within a process, improving responsiveness and resource utilization. Thread management can be handled by the OS (kernel threads) or by a user-level library (user threads). Thread synchronization is necessary when threads access shared data. Thread pools manage a collection of worker threads to handle tasks efficiently.",
+            "implementations": [
+                "Kernel Threads",
+                "User Threads",
+                "Thread Pools",
+                "POSIX Threads (pthreads)"
+            ],
+            "relationships": [
+                "Lightweight Alternative to Processes",
+                "Works with Process Management",
+                "Requires Synchronization",
+                "Enables Parallelism"
+            ],
+            "parentId": null
+        },
+        {
+            "id": 11,
+            "size": 6,
+            "text": "Security & Protection",
+            "details": "Security and protection mechanisms ensure that system resources are accessed only by authorized users...",
+            "fullContent": "Security and protection mechanisms ensure that system resources are accessed only by authorized users and processes. Access control includes authentication (verifying identity) and authorization (determining permissions). The OS implements user accounts, file permissions, and access control lists (ACLs). Protection domains separate system and user modes, with privileged instructions only executable in kernel mode. Security mechanisms protect against unauthorized access, malware, and system breaches. Modern OSes include features like encryption, firewalls, and intrusion detection.",
+            "implementations": [
+                "Access Control Lists",
+                "User Authentication",
+                "File Permissions",
+                "Encryption",
+                "Firewalls"
+            ],
+            "relationships": [
+                "Protects System Resources",
+                "Works with File Systems",
+                "Integrates with Process Management",
+                "Essential for Multi-user Systems"
+            ],
+            "parentId": null
+        },
+        {
+            "id": 12,
+            "size": 6,
+            "text": "System Calls",
+            "details": "System calls provide the interface between user programs and the operating system kernel. They allow...",
+            "fullContent": "System calls provide the interface between user programs and the operating system kernel. They allow user programs to request services from the OS, such as file operations, process management, and network communication. System calls are typically implemented through a software interrupt or trap instruction that switches from user mode to kernel mode. Common system calls include open(), read(), write(), fork(), exec(), wait(), and exit(). The system call interface provides a stable API that abstracts away hardware details and ensures controlled access to system resources.",
+            "implementations": [
+                "POSIX System Calls",
+                "Windows API",
+                "System Call Interface",
+                "Trap Mechanism"
+            ],
+            "relationships": [
+                "Interface to OS Kernel",
+                "Used by All User Programs",
+                "Enables Resource Access",
+                "Foundation for APIs"
+            ],
+            "parentId": null
+        }
+    ],
+    "paths": []
+}

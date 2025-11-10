@@ -1,0 +1,236 @@
+{
+  "dots": [
+    {
+      "id": 1,
+      "size": 6,
+      "text": "First Point of Interest",
+      "details": "This location was first discovered in 1985 by Dr. Sarah Chen...",
+      "fullContent": "This location was first discovered in 1985 by Dr. Sarah Chen...This location was first discovered in 1985 by Dr. Sarah Chen...This location was first discovered in 1985 by Dr. Sarah Chen...This location was first discovered in 1985 by Dr. Sarah Chen...This location was first discovered in 1985 by Dr. Sarah Chen...",
+      "children": [
+        {
+          "id": 101,
+          "size": 3,
+          "text": "Quantum Computing Lab",
+          "details": "A specialized laboratory focusing on quantum circuit optimization...",
+          "fullContent": "A specialized laboratory focusing on quantum circuit optimization...A specialized laboratory focusing on quantum circuit optimization...A specialized laboratory focusing on quantum circuit optimization...A specialized laboratory focusing on quantum circuit optimization...A specialized laboratory focusing on quantum circuit optimization..."
+        },
+        {
+          "id": 102,
+          "size": 2,
+          "text": "Quantum Data Center",
+          "details": "Houses the primary quantum data processing units...",
+          "fullContent": "Houses the primary quantum data processing units...Houses the primary quantum data processing units...Houses the primary quantum data processing units...Houses the primary quantum data processing units...Houses the primary quantum data processing units..."
+        },
+        {
+          "id": 103,
+          "size": 2,
+          "text": "Quantum Research Office",
+          "details": "Administrative hub for quantum research initiatives...",
+          "fullContent": "Administrative hub for quantum research initiatives...Administrative hub for quantum research initiatives...Administrative hub for quantum research initiatives...Administrative hub for quantum research initiatives...Administrative hub for quantum research initiatives..."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "size": 4,
+      "text": "Second Point of Interest",
+      "details": "Established in 1992, this research center...",
+      "fullContent": "Established in 1992, this research center...Established in 1992, this research center...Established in 1992, this research center...Established in 1992, this research center...Established in 1992, this research center...",
+      "children": [
+        {
+          "id": 201,
+          "size": 2,
+          "text": "Data Analysis Wing",
+          "details": "Specialized facility for processing research data...",
+          "fullContent": "Specialized facility for processing research data...Specialized facility for processing research data...Specialized facility for processing research data...Specialized facility for processing research data...Specialized facility for processing research data...",
+          "children": [
+            {
+              "id": 2011,
+              "size": 2,
+              "text": "Neural Processing Unit",
+              "details": "Advanced AI processing systems...",
+              "fullContent": "Advanced AI processing systems...Advanced AI processing systems...Advanced AI processing systems...Advanced AI processing systems...Advanced AI processing systems..."
+            },
+            {
+              "id": 2012,
+              "size": 2,
+              "text": "Data Visualization Lab",
+              "details": "Real-time 3D visualization systems...",
+              "fullContent": "Real-time 3D visualization systems...Real-time 3D visualization systems...Real-time 3D visualization systems...Real-time 3D visualization systems...Real-time 3D visualization systems..."
+            }
+          ]
+        },
+        {
+          "id": 202,
+          "size": 2,
+          "text": "Research Library",
+          "details": "Houses extensive collection of scientific publications...",
+          "fullContent": "Houses extensive collection of scientific publications...Houses extensive collection of scientific publications...Houses extensive collection of scientific publications...Houses extensive collection of scientific publications...Houses extensive collection of scientific publications..."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "size": 6,
+      "text": "Third Point of Interest",
+      "details": "Known for its groundbreaking work in neural networks...",
+      "fullContent": "Known for its groundbreaking work in neural networks...Known for its groundbreaking work in neural networks...Known for its groundbreaking work in neural networks...Known for its groundbreaking work in neural networks...Known for its groundbreaking work in neural networks...",
+      "children": [
+        {
+          "id": 301,
+          "size": 3,
+          "text": "Neural Interface Lab",
+          "details": "Primary research facility for brain-computer interfaces...",
+          "fullContent": "Primary research facility for brain-computer interfaces...Primary research facility for brain-computer interfaces...Primary research facility for brain-computer interfaces...Primary research facility for brain-computer interfaces...Primary research facility for brain-computer interfaces...",
+          "children": [
+            {
+              "id": 3011,
+              "size": 2,
+              "text": "Signal Processing Unit",
+              "details": "Real-time neural signal analysis...",
+              "fullContent": "Real-time neural signal analysis...Real-time neural signal analysis...Real-time neural signal analysis...Real-time neural signal analysis...Real-time neural signal analysis..."
+            },
+            {
+              "id": 3012,
+              "size": 2,
+              "text": "Interface Testing Chamber",
+              "details": "Controlled environment for BCI testing...",
+              "fullContent": "Controlled environment for BCI testing...Controlled environment for BCI testing...Controlled environment for BCI testing...Controlled environment for BCI testing...Controlled environment for BCI testing..."
+            }
+          ]
+        },
+        {
+          "id": 302,
+          "size": 2,
+          "text": "Deep Learning Center",
+          "details": "Dedicated to advancing neural network architectures...",
+          "fullContent": "Dedicated to advancing neural network architectures...Dedicated to advancing neural network architectures...Dedicated to advancing neural network architectures...Dedicated to advancing neural network architectures...Dedicated to advancing neural network architectures..."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "size": 5,
+      "text": "Fourth Point of Interest",
+      "details": "This collaborative hub connects researchers...",
+      "children": [
+        {
+          "id": 401,
+          "size": 2,
+          "text": "VR Research Lab",
+          "details": "State-of-the-art virtual reality testing facility...",
+          "fullContent": "State-of-the-art virtual reality testing facility...State-of-the-art virtual reality testing facility...State-of-the-art virtual reality testing facility...State-of-the-art virtual reality testing facility...State-of-the-art virtual reality testing facility..."
+        },
+        {
+          "id": 402,
+          "size": 2,
+          "text": "Biocomputing Center",
+          "details": "Advanced biological computation research space...",
+          "fullContent": "Advanced biological computation research space...Advanced biological computation research space...Advanced biological computation research space...Advanced biological computation research space...Advanced biological computation research space..."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "size": 6,
+      "text": "Fifth Point of Interest",
+      "details": "A pioneering facility focused on quantum entanglement...",
+      "children": [
+        {
+          "id": 501,
+          "size": 3,
+          "text": "Clean Room A",
+          "details": "Primary quantum experimentation chamber...",
+          "fullContent": "Primary quantum experimentation chamber...Primary quantum experimentation chamber...Primary quantum experimentation chamber...Primary quantum experimentation chamber...Primary quantum experimentation chamber..."
+        },
+        {
+          "id": 502,
+          "size": 2,
+          "text": "Teleportation Lab",
+          "details": "Specialized lab for quantum teleportation research...",
+          "fullContent": "Specialized lab for quantum teleportation research...Specialized lab for quantum teleportation research...Specialized lab for quantum teleportation research...Specialized lab for quantum teleportation research...Specialized lab for quantum teleportation research..."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "size": 3,
+      "text": "Sixth Point of Interest",
+      "details": "Home to the world's most advanced particle accelerator...",
+      "children": [
+        {
+          "id": 601,
+          "size": 2,
+          "text": "Simulation Center",
+          "details": "Houses the main particle simulation systems...",
+          "fullContent": "Houses the main particle simulation systems...Houses the main particle simulation systems...Houses the main particle simulation systems...Houses the main particle simulation systems...Houses the main particle simulation systems..."
+        },
+        {
+          "id": 602,
+          "size": 2,
+          "text": "Theory Division",
+          "details": "Department for theoretical physics research...",
+          "fullContent": "Department for theoretical physics research...Department for theoretical physics research...Department for theoretical physics research...Department for theoretical physics research...Department for theoretical physics research..."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "size": 5,
+      "text": "Seventh Point of Interest",
+      "details": "An innovative space dedicated to quantum cryptography...",
+      "children": [
+        {
+          "id": 701,
+          "size": 2,
+          "text": "Cryptography Lab",
+          "details": "Main research space for quantum encryption...",
+          "fullContent": "Main research space for quantum encryption...Main research space for quantum encryption...Main research space for quantum encryption...Main research space for quantum encryption...Main research space for quantum encryption..."
+        },
+        {
+          "id": 702,
+          "size": 2,
+          "text": "Protocol Testing Center",
+          "details": "Facility for testing new security protocols...",
+          "fullContent": "Facility for testing new security protocols...Facility for testing new security protocols...Facility for testing new security protocols...Facility for testing new security protocols...Facility for testing new security protocols..."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "size": 4,
+      "text": "Eighth Point of Interest",
+      "details": "A specialized research center focusing on quantum error correction...",
+      "children": [
+        {
+          "id": 801,
+          "size": 2,
+          "text": "Error Correction Lab",
+          "details": "Primary facility for quantum error correction research...",
+          "fullContent": "Primary facility for quantum error correction research...Primary facility for quantum error correction research...Primary facility for quantum error correction research...Primary facility for quantum error correction research...Primary facility for quantum error correction research..."
+        },
+        {
+          "id": 802,
+          "size": 2,
+          "text": "Reliability Testing Center",
+          "details": "Specialized center for quantum computer performance testing...",
+          "fullContent": "Specialized center for quantum computer performance testing...Specialized center for quantum computer performance testing...Specialized center for quantum computer performance testing...Specialized center for quantum computer performance testing...Specialized center for quantum computer performance testing..."
+        }
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "id": "path1",
+      "name": "Quantum Research Tour",
+      "description": "Explore our quantum research facilities",
+      "dots": [1, 101, 102, 103]
+    },
+    {
+      "id": "path2",
+      "name": "Neural Network Journey",
+      "description": "Follow the development of our neural networks",
+      "dots": [3, 301, 3011, 3012]
+    }
+  ]
+} 

@@ -1,0 +1,136 @@
+/* graph-styles.css */
+.container {
+    width: 100%;
+    height: 100vh;
+    background-color: #f3f4f6;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .controls {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+  }
+  
+  .button {
+    padding: 0.5rem;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .button-primary {
+    background-color: #3b82f6;
+    color: white;
+  }
+  
+  .button-primary:hover {
+    background-color: #2563eb;
+  }
+  
+  .button-secondary {
+    background-color: #6b7280;
+    color: white;
+  }
+  
+  .button-secondary:hover {
+    background-color: #4b5563;
+  }
+  
+  .move-icon {
+    padding: 0.5rem;
+    background-color: #e5e7eb;
+    border-radius: 0.25rem;
+  }
+  
+  .drag-area {
+    width: 100%;
+    height: 100%;
+    cursor: move;
+  }
+  
+  .graph-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-origin: center;
+    transition: transform 0.3s ease-out;
+  }
+  
+  .node {
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  
+  .node:hover {
+    fill-opacity: 0.8;
+  }
+  
+  .node-selected {
+    stroke: white;
+    stroke-width: 2;
+  }
+  
+  .edge {
+    stroke: #94a3b8;
+    stroke-width: 2;
+    opacity: 0.6;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  
+  .edge:hover {
+    stroke: #64748b;
+    opacity: 1;
+  }
+  
+  .edge-selected {
+    stroke: #475569;
+    stroke-width: 3;
+  }
+  
+  .arrow {
+    fill: #94a3b8;
+    opacity: 0.6;
+    transition: all 0.3s;
+  }
+  
+  .arrow-selected {
+    fill: #475569;
+  }
+  
+  .node-text {
+    font-size: 0.875rem;
+    user-select: none;
+    pointer-events: none;
+    fill: #475569;
+  }
+  
+  .content-container {
+    text-align: center;
+    background-color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .content-title {
+    font-size: 1.125rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+  
+  .content-text {
+    font-size: 0.875rem;
+    color: #4b5563;
+  }

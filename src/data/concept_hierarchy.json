@@ -1,0 +1,194 @@
+[
+  {
+    "concept_name": "Arrays",
+    "description": "Arrays are one of the most basic and widely used data structures. They store elements of the same type in contiguous memory locations, which allows for O(1) time complexity when accessing elements by their index. Arrays have a fixed size (in most languages) and provide excellent cache locality. However, inserting or deleting elements in the middle requires shifting elements, resulting in O(n) time complexity. Arrays are the foundation for many other data structures and algorithms.",
+    "sub_concepts": [],
+    "implementations": [
+      "Static Arrays",
+      "Dynamic Arrays",
+      "Multi-dimensional Arrays"
+    ],
+    "relationships": [
+      "Foundation for ArrayList/Vector",
+      "Used in Hash Tables",
+      "Basis for Heaps"
+    ],
+    "hierarchy_level": "level_0"
+  },
+  {
+    "concept_name": "Linked Lists",
+    "description": "Linked Lists consist of nodes where each node contains data and a pointer/reference to the next node in the sequence. Unlike arrays, linked lists do not require contiguous memory allocation, making them more flexible for insertions and deletions (O(1) when you have the reference). However, accessing an element by index requires O(n) time as you must traverse from the head. Variants include singly linked lists, doubly linked lists, and circular linked lists. They are particularly useful when you need frequent insertions/deletions and don't need random access.",
+    "sub_concepts": [],
+    "implementations": [
+      "Singly Linked List",
+      "Doubly Linked List",
+      "Circular Linked List"
+    ],
+    "relationships": [
+      "Used in Stack/Queue implementations",
+      "Foundation for more complex structures",
+      "Alternative to Arrays"
+    ],
+    "hierarchy_level": "level_0"
+  },
+  {
+    "concept_name": "Stacks",
+    "description": "Stacks follow the Last-In-First-Out (LIFO) principle, where the most recently added element is the first one to be removed. The main operations are push (add to top), pop (remove from top), and peek (view top element). All operations typically have O(1) time complexity. Stacks are used in function call management, expression evaluation, backtracking algorithms, undo mechanisms, and depth-first search. They can be implemented using arrays or linked lists.",
+    "sub_concepts": [],
+    "implementations": [
+      "Array-based Stack",
+      "Linked List Stack"
+    ],
+    "relationships": [
+      "Uses Array or Linked List",
+      "Used in DFS",
+      "Call Stack in recursion"
+    ],
+    "hierarchy_level": "level_0"
+  },
+  {
+    "concept_name": "Queues",
+    "description": "Queues follow the First-In-First-Out (FIFO) principle, where the first element added is the first one to be removed. Main operations include enqueue (add to rear), dequeue (remove from front), and peek (view front element). These operations typically have O(1) time complexity. Queues are essential for breadth-first search, scheduling tasks, handling asynchronous requests, and managing resources. Variants include circular queues, priority queues, and double-ended queues (deques).",
+    "sub_concepts": [],
+    "implementations": [
+      "Circular Queue",
+      "Priority Queue",
+      "Deque"
+    ],
+    "relationships": [
+      "Uses Array or Linked List",
+      "Used in BFS",
+      "Basis for Priority Queue"
+    ],
+    "hierarchy_level": "level_0"
+  },
+  {
+    "concept_name": "Trees",
+    "description": "Trees are non-linear hierarchical data structures consisting of nodes connected by edges. Each tree has a root node, and every node has zero or more child nodes. Trees have no cycles. They are fundamental in computer science, used in file systems, databases, compilers, and more. Common types include binary trees, binary search trees, AVL trees, red-black trees, B-trees, and tries. Trees enable efficient searching, sorting, and hierarchical data representation. Time complexity varies by type and operation, but balanced trees typically offer O(log n) for search, insert, and delete.",
+    "sub_concepts": [
+      {
+        "concept_name": "Binary Search Tree",
+        "description": "Binary Search Trees (BST) maintain a sorted order where for each node, all values in the left subtree are less than the node's value, and all values in the right subtree are greater. This property enables efficient searching with O(log n) average time complexity for balanced trees. However, in the worst case (skewed tree), operations can degrade to O(n). BSTs support inorder traversal to get sorted elements, and are the foundation for more advanced balanced tree structures.",
+        "sub_concepts": [],
+        "implementations": [
+          "Standard BST",
+          "Augmented BST"
+        ],
+        "relationships": [
+          "Parent: Trees",
+          "Evolved into AVL/Red-Black Trees"
+        ],
+        "hierarchy_level": "level_1"
+      },
+      {
+        "concept_name": "AVL Tree",
+        "description": "AVL trees are self-balancing binary search trees named after inventors Adelson-Velsky and Landis. They maintain balance by ensuring that for every node, the heights of its left and right subtrees differ by at most 1. When this property is violated after an insertion or deletion, the tree performs rotations (single or double) to restore balance. This guarantees O(log n) time complexity for search, insert, and delete operations. AVL trees are more rigidly balanced than Red-Black trees, making them faster for lookup-intensive applications.",
+        "sub_concepts": [],
+        "implementations": [
+          "Self-balancing with rotations"
+        ],
+        "relationships": [
+          "Parent: Trees",
+          "Sibling: Red-Black Tree",
+          "Based on BST"
+        ],
+        "hierarchy_level": "level_1"
+      },
+      {
+        "concept_name": "Red-Black Tree",
+        "description": "Red-Black trees are self-balancing binary search trees that use an extra bit per node to store color (red or black). They maintain balance through five properties that ensure the tree remains approximately balanced, guaranteeing O(log n) time complexity for basic operations. Unlike AVL trees, they are less rigidly balanced but require fewer rotations during insertion and deletion, making them more efficient for insertion-heavy workloads. They are widely used in language libraries (like Java's TreeMap and C++'s map).",
+        "sub_concepts": [],
+        "implementations": [
+          "Color-based balancing"
+        ],
+        "relationships": [
+          "Parent: Trees",
+          "Sibling: AVL Tree",
+          "Based on BST"
+        ],
+        "hierarchy_level": "level_1"
+      }
+    ],
+    "implementations": [
+      "Binary Tree",
+      "Binary Search Tree",
+      "AVL Tree",
+      "Red-Black Tree",
+      "B-Tree",
+      "Trie"
+    ],
+    "relationships": [
+      "Heaps are specialized trees",
+      "Graphs are generalizations",
+      "Used in many algorithms"
+    ],
+    "hierarchy_level": "level_0"
+  },
+  {
+    "concept_name": "Heaps",
+    "description": "Heaps are complete binary trees that satisfy the heap property: in a max-heap, each parent node is greater than or equal to its children; in a min-heap, each parent is less than or equal to its children. Heaps are typically implemented using arrays for efficiency. They provide O(log n) insertion and deletion of the min/max element, and O(1) access to the min/max element. Heaps are fundamental for implementing priority queues and are used in heap sort, scheduling algorithms, and graph algorithms like Dijkstra's and Prim's.",
+    "sub_concepts": [],
+    "implementations": [
+      "Binary Heap",
+      "Fibonacci Heap",
+      "Binomial Heap"
+    ],
+    "relationships": [
+      "Implements Priority Queue",
+      "Used in Heap Sort",
+      "Special type of Tree",
+      "Array-based implementation"
+    ],
+    "hierarchy_level": "level_0"
+  },
+  {
+    "concept_name": "Hash Tables",
+    "description": "Hash tables (also called hash maps) use a hash function to compute an index into an array of buckets, from which the desired value can be found. They provide average O(1) time complexity for search, insert, and delete operations, making them one of the most efficient data structures for key-value storage. Hash tables handle collisions using techniques like chaining (linked lists) or open addressing (linear probing, quadratic probing). They are widely used in caches, databases, and implementing sets and maps. The performance depends heavily on the quality of the hash function and the load factor.",
+    "sub_concepts": [],
+    "implementations": [
+      "Separate Chaining",
+      "Open Addressing",
+      "Linear Probing",
+      "Quadratic Probing"
+    ],
+    "relationships": [
+      "Uses Arrays and Linked Lists",
+      "Basis for HashSet/HashMap",
+      "Uses hashing algorithms"
+    ],
+    "hierarchy_level": "level_0"
+  },
+  {
+    "concept_name": "Graphs",
+    "description": "Graphs are versatile data structures consisting of vertices (nodes) connected by edges. They can be directed or undirected, weighted or unweighted, and may contain cycles. Graphs represent relationships and networks in many real-world scenarios: social networks, road maps, computer networks, dependencies, and more. Common representations include adjacency matrices (2D arrays) and adjacency lists (arrays of lists). Graph algorithms like BFS, DFS, Dijkstra's, and Bellman-Ford are essential for solving path-finding, connectivity, and optimization problems. Time complexity varies widely based on representation and algorithm.",
+    "sub_concepts": [],
+    "implementations": [
+      "Adjacency Matrix",
+      "Adjacency List",
+      "Edge List"
+    ],
+    "relationships": [
+      "Generalization of Trees",
+      "Uses Arrays/Linked Lists/Hash Tables",
+      "Algorithms: BFS, DFS, Dijkstra"
+    ],
+    "hierarchy_level": "level_0"
+  },
+  {
+    "concept_name": "Tries",
+    "description": "Tries (pronounced 'try') are tree-based data structures specialized for storing strings. Each node represents a character, and paths from root to nodes spell out strings. Tries excel at prefix-based operations, making them ideal for autocomplete, spell checking, and IP routing. They offer O(m) time complexity for search, insert, and delete operations, where m is the length of the string. While they can use more memory than hash tables, tries provide ordered traversal and efficient prefix matching. Compressed versions like radix trees and Patricia tries optimize space usage.",
+    "sub_concepts": [],
+    "implementations": [
+      "Standard Trie",
+      "Compressed Trie",
+      "Radix Tree",
+      "Patricia Tree"
+    ],
+    "relationships": [
+      "Special type of Tree",
+      "Used in autocomplete",
+      "Alternative to Hash Tables for strings"
+    ],
+    "hierarchy_level": "level_0"
+  }
+]

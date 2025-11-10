@@ -1,0 +1,44 @@
+{
+  "name": "athena-visual",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "node server.js",
+    "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "coords": "node src/scripts/generateCoordinates.js",
+    "convert": "node src/scripts/convertConceptsToDots.js",
+    "db:populate": "node src/scripts/populateDatabase.js",
+    "db:create": "node src/scripts/createSubject.js",
+    "db:list": "node src/scripts/listSubjects.js",
+    "db:view": "node src/scripts/viewData.js"
+  },
+  "dependencies": {
+    "@emailjs/browser": "^4.4.1",
+    "d3": "^7.9.0",
+    "lucide-react": "^0.471.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
+    "vite": "^6.0.5",
+    "mongodb": "^6.3.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "concurrently": "^8.2.2"
+  }
+}
