@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import emailjs from '@emailjs/browser';
+import { getApiEndpoint } from './utils/api.js';
 
 const ZoomableCanvas = () => {
   const [subjects, setSubjects] = useState([]);
@@ -41,7 +42,7 @@ const ZoomableCanvas = () => {
     const fetchSubjects = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/subjects');
+        const response = await fetch(getApiEndpoint('/api/subjects'));
         if (!response.ok) {
           throw new Error('Failed to fetch subjects');
         }
