@@ -46,7 +46,8 @@ const ZoomableCanvas = () => {
 
   // Function to load local JSON data
   const loadLocalData = async () => {
-    const dotsData = await import('./data/data_structures_with_coordinates.json');
+    const dotsData = await import('./data/operating_systems_coordinates.json');
+    const data = dotsData.default;
     const fallbackCenterX = window.innerWidth / 2;
     const fallbackCenterY = window.innerHeight / 2;
     
@@ -74,50 +75,44 @@ const ZoomableCanvas = () => {
       return allDots;
     };
 
-    const processedDots = processDots(dotsData.default.dots);
+    const processedDots = processDots(data.dots);
     setAllDots(processedDots);
     setDots(processedDots);
-    if (dotsData.default.lines) {
-      setAllLines(dotsData.default.lines);
-      setLines(dotsData.default.lines);
+    if (data.lines) {
+      setAllLines(data.lines);
+      setLines(data.lines);
     }
-    if (dotsData.default.paths) {
-      setAllPaths(dotsData.default.paths);
+    if (data.paths) {
+      setAllPaths(data.paths);
     }
     
-    // Create a single high-level dot for local data
+    // Create a single high-level dot from JSON metadata
+    const subjectName = data.name;
+    const subjectSlug = data.slug;
+    const subjectDescription = data.description || 'Explore data structures and algorithms concepts';
+    
     const fallbackHighLevelX = window.innerWidth / 2;
     const fallbackHighLevelY = window.innerHeight / 2;
-    setHighLevelDots([{
-      id: 'subject-data-structures',
+    
+    const highLevelDot = {
+      id: `subject-${subjectSlug}`,
       x: fallbackHighLevelX,
       y: fallbackHighLevelY,
       size: 8,
-      text: 'Data Structures and Algorithms',
-      details: 'Explore data structures and algorithms concepts',
-      fullContent: 'Explore topics and concepts related to Data Structures and Algorithms',
+      text: subjectName,
+      details: subjectDescription,
+      fullContent: subjectDescription,
       color: 'hsl(200, 70%, 60%)',
       isHighLevel: true,
       parentId: null,
       isParent: true,
       level: 0
-    }]);
+    };
+    
+    setHighLevelDots([highLevelDot]);
     
     // Initially show high-level view
-    setDots([{
-      id: 'subject-data-structures',
-      x: fallbackHighLevelX,
-      y: fallbackHighLevelY,
-      size: 8,
-      text: 'Data Structures and Algorithms',
-      details: 'Explore data structures and algorithms concepts',
-      fullContent: 'Explore topics and concepts related to Data Structures and Algorithms',
-      color: 'hsl(200, 70%, 60%)',
-      isHighLevel: true,
-      parentId: null,
-      isParent: true,
-      level: 0
-    }]);
+    setDots([highLevelDot]);
     setLines({ hierarchical: [], connections: [] });
     setSelectedSubject(null);
   };
@@ -157,7 +152,29 @@ const ZoomableCanvas = () => {
           throw new Error('Failed to fetch subjects');
         }
         const subjectsData = await response.json();
+        console.log('📡 API Response - Subjects data:', subjectsData);
+        console.log('📡 First subject:', subjectsData[0]);
+        if (subjectsData[0]?.dots?.[0]) {
+          console.log('📡 First dot of first subject:', subjectsData[0].dots[0]);
+          console.log('📡 First dot x coordinate type:', typeof subjectsData[0].dots[0].x);
+          console.log('📡 First dot x value:', subjectsData[0].dots[0].x);
+        }
         setSubjects(subjectsData);
+        
+        // Check if dots have coordinates, if not generate them
+        const subjectsWithCoords = subjectsData.map(subject => {
+          // Check if first dot has coordinates
+          const firstDot = subject.dots?.[0];
+          const hasCoordinates = firstDot && (firstDot.x !== undefined || firstDot.x);
+          
+          if (!hasCoordinates && subject.dots) {
+            console.warn(`Subject "${subject.name}" is missing coordinates. Consider generating them with generateCoordinates.js`);
+            // For now, we'll handle this by evaluating expressions or using a fallback
+            // In production, all subjects should have coordinates generated beforehand
+          }
+          
+          return subject;
+        });
         
         // Process all subjects
         const canvasCenterX = window.innerWidth / 2;
@@ -180,17 +197,28 @@ const ZoomableCanvas = () => {
           
           // Function to evaluate position expressions with cluster offset
           const evaluatePosition = (expr, isX = true) => {
-            // Replace centerX and centerY with actual values, then add cluster offset
-            let baseValue;
-            if (isX) {
-              baseValue = eval(expr.replace('centerX', canvasCenterX).replace('centerY', canvasCenterY));
-              // For the first subject, keep it centered; others get offset
-              return subjectIndex === 0 ? baseValue : baseValue + clusterOffsetX;
-            } else {
-              baseValue = eval(expr.replace('centerX', canvasCenterX).replace('centerY', canvasCenterY));
-              // For the first subject, keep it centered; others get offset
-              return subjectIndex === 0 ? baseValue : baseValue + clusterOffsetY;
+            // If expr is already a number, return it with cluster offset
+            if (typeof expr === 'number') {
+              return subjectIndex === 0 ? expr : (isX ? expr + clusterOffsetX : expr + clusterOffsetY);
             }
+            
+            // If expr is a string, evaluate it
+            if (typeof expr === 'string') {
+              // Replace centerX and centerY with actual values, then add cluster offset
+              let baseValue;
+              if (isX) {
+                baseValue = eval(expr.replace('centerX', canvasCenterX).replace('centerY', canvasCenterY));
+                // For the first subject, keep it centered; others get offset
+                return subjectIndex === 0 ? baseValue : baseValue + clusterOffsetX;
+              } else {
+                baseValue = eval(expr.replace('centerX', canvasCenterX).replace('centerY', canvasCenterY));
+                // For the first subject, keep it centered; others get offset
+                return subjectIndex === 0 ? baseValue : baseValue + clusterOffsetY;
+              }
+            }
+            
+            console.warn(`⚠️ Unexpected coordinate type: ${typeof expr}`, expr);
+            return 0; // Fallback to 0 if coordinate is invalid
           };
 
           // Process lines with subject-specific IDs (add prefix to avoid conflicts)
@@ -273,6 +301,11 @@ const ZoomableCanvas = () => {
         });
         
         // Store all data
+        console.log('✅ Processed dots count:', allProcessedDots.length);
+        console.log('✅ First 3 processed dots:', allProcessedDots.slice(0, 3));
+        console.log('✅ Hierarchical lines:', allHierarchicalLines.length);
+        console.log('✅ Connection lines:', allConnectionLines.length);
+        
         setAllDots(allProcessedDots);
         setAllLines({
           hierarchical: allHierarchicalLines,
@@ -287,9 +320,16 @@ const ZoomableCanvas = () => {
         const highLevelAngleStep = (2 * Math.PI) / subjectsData.length;
         
         const highLevelSubjectDots = subjectsData.map((subject, index) => {
-          const angle = index * highLevelAngleStep;
-          const x = highLevelCenterX + Math.cos(angle) * subjectSpacing;
-          const y = highLevelCenterY + Math.sin(angle) * subjectSpacing;
+          // If there's only one subject, center it. Otherwise use circular layout
+          let x, y;
+          if (subjectsData.length === 1) {
+            x = highLevelCenterX;
+            y = highLevelCenterY;
+          } else {
+            const angle = index * highLevelAngleStep;
+            x = highLevelCenterX + Math.cos(angle) * subjectSpacing;
+            y = highLevelCenterY + Math.sin(angle) * subjectSpacing;
+          }
           
           return {
             id: `subject-${subject.slug}`,
@@ -313,10 +353,15 @@ const ZoomableCanvas = () => {
         
         setHighLevelDots(highLevelSubjectDots);
         
+        console.log('🎯 High-level dots created:', highLevelSubjectDots.length);
+        console.log('🎯 High-level dots:', highLevelSubjectDots);
+        
         // Initially show high-level view (no subject selected)
         setDots(highLevelSubjectDots);
         setLines({ hierarchical: [], connections: [] });
         setSelectedSubject(null);
+        
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching subjects:', error);
         // Fallback to local data if API fails
@@ -1663,6 +1708,15 @@ const ZoomableCanvas = () => {
               );
             })}
           </svg>
+
+          {(() => {
+            console.log('🎨 Rendering dots. Count:', dots.length);
+            if (dots.length > 0) {
+              console.log('🎨 First dot to render:', dots[0]);
+              console.log('🎨 First dot coordinates:', { x: dots[0].x, y: dots[0].y });
+            }
+            return null;
+          })()}
 
           {dots.map((dot) => {
             const proximityOpacity = getProximityOpacity(dot.x, dot.y);

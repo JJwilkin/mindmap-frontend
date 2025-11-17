@@ -230,13 +230,17 @@ export function generateCoordinates(dotsData, options = {}) {
   // Collect all lines
   const { hierarchicalLines, connectionLines } = collectLines(processedDots);
 
+  // Preserve all metadata from the input
   return {
-    ...dotsData,
+    name: dotsData.name,
+    slug: dotsData.slug,
+    description: dotsData.description,
     dots: processedDots,
     lines: {
       hierarchical: hierarchicalLines,
       connections: connectionLines
-    }
+    },
+    paths: dotsData.paths || []
   };
 }
 
