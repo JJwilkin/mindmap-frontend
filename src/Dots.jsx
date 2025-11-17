@@ -1720,11 +1720,12 @@ const ZoomableCanvas = () => {
             const isSubtopic = isSubtopicOfHovered(dot);
             const isHovered = hoveredDot?.id === dot.id;
             
+            // For high-level subjects (no selectedSubject), don't use proximity labels
+            const isHighLevelSubject = !selectedSubject && !dot.parentId;
+            
             // Show proximity label if:
-            // 1. Within proximity radius
-            // 2. OR it's a subtopic of the currently hovered dot
-            // 3. OR it's the currently hovered dot itself
-            const showProximityLabel = (
+            // 1. NOT a high-level subject AND (within proximity radius OR subtopic OR hovered)
+            const showProximityLabel = !isHighLevelSubject && (
               proximityOpacity > 0 ||
               isSubtopic ||
               isHovered
@@ -1755,7 +1756,7 @@ const ZoomableCanvas = () => {
                 onMouseEnter={() => setHoveredDot(dot)}
                 onMouseLeave={() => setHoveredDot(null)}
               >
-                {/* Proximity label - fades in as cursor gets closer */}
+                {/* Proximity label - fades in as cursor gets closer (only for non-high-level subjects) */}
                 {showProximityLabel && (
                   <div 
                     className="absolute text-white font-semibold pointer-events-none"
@@ -1777,19 +1778,21 @@ const ZoomableCanvas = () => {
                   </div>
                 )}
                 
-                {/* Only show text for parent dots that are top-level (no parentId) */}
-                {dot.isParent && !dot.parentId && scale < 1.5 && scale > 0.5 && !showProximityLabel && (
+                {/* Static labels for high-level subjects - always visible, no proximity effects */}
+                {isHighLevelSubject && (
                   <div 
-                    className="absolute text-white text-lg font-bold pointer-events-none"
+                    className="absolute text-white font-bold pointer-events-none"
                     style={{
-                      top: `${-scaledSize / 2 - 10}px`,
+                      top: `${-scaledSize / 2 - (isHovered ? 14 : 10)}px`,
                       left: '50%',
-                      transform: `translateX(-50%)`,
-                      opacity: Math.min(1, Math.max(0, (scale - 0.5) * 2)),
-                      textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
+                      transform: `translateX(-50%) scale(${isHovered ? 1.15 : 1})`,
+                      opacity: 1,
+                      textShadow: isHovered 
+                        ? '2px 2px 6px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.3)' 
+                        : '2px 2px 4px rgba(0, 0, 0, 0.7)',
                       whiteSpace: 'nowrap',
-                      transition: 'opacity 0.3s ease-out, top 0.3s ease-out',
-                      fontSize: `${Math.max(12, Math.min(20, 18 / scale))}px`,
+                      transition: 'transform 0.2s ease-out, top 0.2s ease-out, text-shadow 0.2s ease-out',
+                      fontSize: `${Math.max(12, Math.min(18, 15 / scale))}px`,
                     }}
                   >
                     {dot.text}
@@ -1802,7 +1805,8 @@ const ZoomableCanvas = () => {
                     width: `${scaledSize}px`,
                     height: `${scaledSize}px`,
                     backgroundColor: dot.color,
-                    transition: 'width 0.2s ease-out, height 0.2s ease-out, box-shadow 0.3s ease-out',
+                    transform: isHighLevelSubject && isHovered ? 'scale(1.1)' : 'scale(1)',
+                    transition: 'width 0.2s ease-out, height 0.2s ease-out, box-shadow 0.3s ease-out, transform 0.2s ease-out',
                     boxShadow: selectedDot?.id === dot.id 
                       ? `0 0 ${15 / scale}px ${5 / scale}px rgba(100, 200, 255, 0.6), 0 0 ${30 / scale}px ${10 / scale}px rgba(100, 200, 255, 0.4), 0 0 ${45 / scale}px ${15 / scale}px rgba(100, 200, 255, 0.2)`
                       : hoveredDot?.id === dot.id
