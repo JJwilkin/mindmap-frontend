@@ -12,14 +12,21 @@ npm install
 yarn install
 ```
 
-### 2. Configure MongoDB
+### 2. Configure Environment
 
 Create a `.env` file in the project root:
 
 ```bash
+# Database Configuration (for API mode)
 MONGODB_URI=mongodb://localhost:27017
 MONGODB_DB_NAME=athena-graph
+
+# Local Testing Mode (optional)
+# Set to 'true' to bypass API and use local JSON files directly
+VITE_USE_LOCAL_DATA=false
 ```
+
+**Local Testing Mode**: If you want to test with local JSON files without running the API server, set `VITE_USE_LOCAL_DATA=true` in your `.env` file. This will load data directly from `src/data/data_structures_with_coordinates.json`.
 
 ### 3. Populate Database
 
@@ -76,6 +83,7 @@ Each cluster displays:
 - **Multiple Subject Clusters**: Each subject appears as a separate, visually distinct cluster
 - **Circular Layout**: Subjects are arranged in a circular pattern around the center
 - **Subject-Specific Paths**: Learning paths are organized by subject
+- **Local Testing Mode**: Bypass API and use local JSON files for development
 - **Fallback Support**: If the API fails, the app falls back to local JSON data
 
 ## API Endpoints
@@ -98,4 +106,10 @@ Each cluster displays:
 3. **Subjects not loading**:
    - Verify subjects exist in database: `npm run db:view`
    - Check server logs for connection errors
+
+4. **Using Local Testing Mode**:
+   - Set `VITE_USE_LOCAL_DATA=true` in your `.env` file
+   - Restart the dev server: `npm run dev`
+   - The app will load `src/data/data_structures_with_coordinates.json` directly
+   - No API server or MongoDB required
 

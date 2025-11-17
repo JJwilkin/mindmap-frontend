@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import emailjs from '@emailjs/browser';
 import { getApiEndpoint } from './utils/api.js';
 
+// Local testing mode - set to true to bypass API and use local JSON files
+// You can also set VITE_USE_LOCAL_DATA=true in your .env file
+const USE_LOCAL_DATA = import.meta.env.VITE_USE_LOCAL_DATA === 'true' || false;
+
 const ZoomableCanvas = () => {
   const [subjects, setSubjects] = useState([]);
   const [allDots, setAllDots] = useState([]); // Store all dots from all subjects
@@ -36,10 +40,116 @@ const ZoomableCanvas = () => {
   const [showQuizResults, setShowQuizResults] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showExitSubjectPrompt, setShowExitSubjectPrompt] = useState(false);
+  const [hoveredLine, setHoveredLine] = useState(null);
+  const [zoomMousePosition, setZoomMousePosition] = useState(null);
+  const [zoomTimeout, setZoomTimeout] = useState(null);
 
-  // Fetch subjects from API
+  // Function to load local JSON data
+  const loadLocalData = async () => {
+    const dotsData = await import('./data/data_structures_with_coordinates.json');
+    const fallbackCenterX = window.innerWidth / 2;
+    const fallbackCenterY = window.innerHeight / 2;
+    
+    const evaluatePosition = (expr) => {
+      return eval(expr.replace('centerX', fallbackCenterX).replace('centerY', fallbackCenterY));
+    };
+
+    const processDots = (dotsArray, parentId = null, level = 0) => {
+      const allDots = [];
+      dotsArray.forEach(dot => {
+        const parentDot = {
+          ...dot,
+          x: evaluatePosition(dot.x),
+          y: evaluatePosition(dot.y),
+          isParent: !!dot.children,
+          level: level,
+          parentId: parentId
+        };
+        delete parentDot.children;
+        allDots.push(parentDot);
+        if (dot.children) {
+          allDots.push(...processDots(dot.children, dot.id, level + 1));
+        }
+      });
+      return allDots;
+    };
+
+    const processedDots = processDots(dotsData.default.dots);
+    setAllDots(processedDots);
+    setDots(processedDots);
+    if (dotsData.default.lines) {
+      setAllLines(dotsData.default.lines);
+      setLines(dotsData.default.lines);
+    }
+    if (dotsData.default.paths) {
+      setAllPaths(dotsData.default.paths);
+    }
+    
+    // Create a single high-level dot for local data
+    const fallbackHighLevelX = window.innerWidth / 2;
+    const fallbackHighLevelY = window.innerHeight / 2;
+    setHighLevelDots([{
+      id: 'subject-data-structures',
+      x: fallbackHighLevelX,
+      y: fallbackHighLevelY,
+      size: 8,
+      text: 'Data Structures and Algorithms',
+      details: 'Explore data structures and algorithms concepts',
+      fullContent: 'Explore topics and concepts related to Data Structures and Algorithms',
+      color: 'hsl(200, 70%, 60%)',
+      isHighLevel: true,
+      parentId: null,
+      isParent: true,
+      level: 0
+    }]);
+    
+    // Initially show high-level view
+    setDots([{
+      id: 'subject-data-structures',
+      x: fallbackHighLevelX,
+      y: fallbackHighLevelY,
+      size: 8,
+      text: 'Data Structures and Algorithms',
+      details: 'Explore data structures and algorithms concepts',
+      fullContent: 'Explore topics and concepts related to Data Structures and Algorithms',
+      color: 'hsl(200, 70%, 60%)',
+      isHighLevel: true,
+      parentId: null,
+      isParent: true,
+      level: 0
+    }]);
+    setLines({ hierarchical: [], connections: [] });
+    setSelectedSubject(null);
+  };
+
+  // Cleanup zoom timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (zoomTimeout) {
+        clearTimeout(zoomTimeout);
+      }
+    };
+  }, [zoomTimeout]);
+
+  // Fetch subjects from API or use local data
   useEffect(() => {
     const fetchSubjects = async () => {
+      // Local testing mode - skip API call
+      if (USE_LOCAL_DATA) {
+        try {
+          setLoading(true);
+          console.log('🔧 Local testing mode: Loading data from local JSON files');
+          await loadLocalData();
+          setLoading(false);
+          return;
+        } catch (error) {
+          console.error('Error loading local data:', error);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Normal mode - fetch from API
       try {
         setLoading(true);
         const response = await fetch(getApiEndpoint('/api/subjects'));
@@ -211,68 +321,13 @@ const ZoomableCanvas = () => {
         console.error('Error fetching subjects:', error);
         // Fallback to local data if API fails
         try {
-          const dotsData = await import('./data/dots-with-coordinates.json');
-          const fallbackCenterX = window.innerWidth / 2;
-          const fallbackCenterY = window.innerHeight / 2;
-          
-          const evaluatePosition = (expr) => {
-            return eval(expr.replace('centerX', fallbackCenterX).replace('centerY', fallbackCenterY));
-          };
-
-          const processDots = (dotsArray, parentId = null, level = 0) => {
-            const allDots = [];
-            dotsArray.forEach(dot => {
-              const parentDot = {
-                ...dot,
-                x: evaluatePosition(dot.x),
-                y: evaluatePosition(dot.y),
-                isParent: !!dot.children,
-                level: level,
-                parentId: parentId
-              };
-              delete parentDot.children;
-              allDots.push(parentDot);
-              if (dot.children) {
-                allDots.push(...processDots(dot.children, dot.id, level + 1));
-              }
-            });
-            return allDots;
-          };
-
-          const processedDots = processDots(dotsData.default.dots);
-          setAllDots(processedDots);
-          setDots(processedDots);
-          if (dotsData.default.lines) {
-            setAllLines(dotsData.default.lines);
-            setLines(dotsData.default.lines);
-          }
-          if (dotsData.default.paths) {
-            setAllPaths(dotsData.default.paths);
-          }
-          
-          // Create a single high-level dot for fallback
-          const fallbackHighLevelX = window.innerWidth / 2;
-          const fallbackHighLevelY = window.innerHeight / 2;
-          setHighLevelDots([{
-            id: 'subject-data-structures',
-            x: fallbackHighLevelX,
-            y: fallbackHighLevelY,
-            size: 8,
-            text: 'Data Structures',
-            details: 'Explore Data Structures',
-            fullContent: 'Explore topics and concepts related to Data Structures',
-            color: 'hsl(270, 70%, 60%)',
-            isHighLevel: true,
-            parentId: null,
-            isParent: true,
-            level: 0
-          }]);
-          setSelectedSubject(null);
+          console.log('⚠️ API failed, falling back to local data');
+          await loadLocalData();
+          setLoading(false);
         } catch (fallbackError) {
           console.error('Fallback also failed:', fallbackError);
+          setLoading(false);
         }
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -282,7 +337,7 @@ const ZoomableCanvas = () => {
   const handleWheel = (e) => {
     e.preventDefault();
 
-    const zoomSensitivity = 0.001; // Adjust this value to control zoom speed
+    const zoomSensitivity = 0.003; // Increased sensitivity for faster zooming
     const delta = e.deltaY;
 
     // Normalize delta based on deltaMode
@@ -296,11 +351,50 @@ const ZoomableCanvas = () => {
     }
 
     // Clamp zoomFactor to prevent extreme zooming
-    zoomFactor = Math.max(0.95, Math.min(1.05, zoomFactor));
+    zoomFactor = Math.max(0.9, Math.min(1.1, zoomFactor));
+
+    // Capture initial mouse position when starting to zoom
+    if (!zoomMousePosition) {
+      setZoomMousePosition({ x: e.clientX, y: e.clientY });
+    }
+
+    // Clear existing timeout and set new one to reset zoom position
+    if (zoomTimeout) {
+      clearTimeout(zoomTimeout);
+    }
+    
+    const newTimeout = setTimeout(() => {
+      setZoomMousePosition(null);
+    }, 200); // Reset after 200ms of no scrolling
+    
+    setZoomTimeout(newTimeout);
 
     setScale(prevScale => {
-      const newScale = prevScale * zoomFactor;
-      return Math.min(Math.max(0.1, newScale), 5);
+      const newScale = Math.min(Math.max(0.1, prevScale * zoomFactor), 5);
+      
+      const isZoomingIn = newScale > prevScale;
+      
+      // Only zoom towards mouse when zooming in, use center when zooming out
+      if (isZoomingIn && zoomMousePosition) {
+        // Use the initial mouse position for zooming in
+        const mouseX = zoomMousePosition.x - window.innerWidth / 2;
+        const mouseY = zoomMousePosition.y - window.innerHeight / 2;
+        
+        // Adjust offset to zoom towards initial mouse position
+        setOffset(prevOffset => {
+          // Calculate how much the mouse position shifts in world coordinates
+          const dx = mouseX * (1 / newScale - 1 / prevScale);
+          const dy = mouseY * (1 / newScale - 1 / prevScale);
+          
+          return {
+            x: prevOffset.x + dx,
+            y: prevOffset.y + dy
+          };
+        });
+      }
+      // When zooming out, don't adjust offset (zoom from center)
+      
+      return newScale;
     });
   };
 
@@ -326,12 +420,21 @@ const ZoomableCanvas = () => {
 
   // Calculate opacity for proximity labels based on distance from cursor
   const getProximityOpacity = (dotX, dotY) => {
-    const proximityRadius = 350; // pixels from cursor (increased for more coverage)
-    const fadeStartRadius = 200; // start fading in at this distance
+    // Scale the proximity radius based on zoom level
+    // When zoomed in (scale > 1), increase the radius
+    // When zoomed out (scale < 1), decrease the radius
+    const baseProximityRadius = 350;
+    const baseFadeStartRadius = 200;
+    
+    const proximityRadius = baseProximityRadius * scale; // pixels from cursor (scaled with zoom)
+    const fadeStartRadius = baseFadeStartRadius * scale; // start fading in at this distance (scaled with zoom)
     
     // Convert dot position to screen coordinates
-    const screenX = (dotX + offset.x) * scale;
-    const screenY = (dotY + offset.y) * scale;
+    // Account for transform-origin: center by calculating the offset caused by scaling
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    const screenX = (dotX + offset.x) * scale + centerX * (1 - scale);
+    const screenY = (dotY + offset.y) * scale + centerY * (1 - scale);
     
     // Calculate distance from mouse
     const dx = screenX - mousePosition.x;
@@ -371,6 +474,36 @@ const ZoomableCanvas = () => {
   const handleDotClick = (dot) => {
     // If clicking on a high-level subject dot, zoom into that subject
     if (dot.isHighLevel) {
+      // Handle local data mode (no subjects array)
+      if (USE_LOCAL_DATA || subjects.length === 0) {
+        // In local mode, show all dots and lines
+        setDots(allDots);
+        setLines(allLines);
+        setSelectedSubject({ 
+          name: dot.text, 
+          _id: dot.id,
+          slug: 'data-structures' 
+        });
+        setShowExitSubjectPrompt(false);
+        
+        // Reset view and zoom to center
+        setScale(1);
+        setOffset({ x: 0, y: 0 });
+        setSelectedDot(null);
+        setActivePath(null);
+        setPathDots([]);
+        setPathPosition(0);
+        
+        // Reset chat when switching subjects
+        setChatMessages([]);
+        setActiveModalTab('overview');
+        setSelectedVideoIndex(0);
+        setShowVideoSelector(false);
+        setQuizAnswers({});
+        setShowQuizResults(false);
+        return;
+      }
+      
       const subject = subjects.find(s => s._id === dot.originalId || s.slug === dot.subjectSlug);
       if (subject) {
         // Filter dots and lines for this subject
@@ -445,8 +578,8 @@ const ZoomableCanvas = () => {
     // Calculate zoom level - reduced multiplier for less aggressive zooming
     const targetSize = 6;
     const baseScale = targetSize / dot.size;
-    // Use a smaller multiplier and cap the maximum zoom
-    const newScale = Math.min(2.5, baseScale * 1.2); // Reduced from * 2 to * 1.2, max zoom of 2.5
+    // Use a smaller multiplier and cap the maximum zoom (60% less zoom)
+    const newScale = Math.min(1.0, baseScale * 0.5); // Much less aggressive zoom
 
     const newOffset = {
       x: window.innerWidth / 2 - dot.x,
@@ -1365,11 +1498,12 @@ const ZoomableCanvas = () => {
           {/* Subject Title - Show when viewing a specific subject */}
           {selectedSubject && (
             <div
-              className="absolute text-white text-lg font-bold pointer-events-none"
+              className="absolute text-white font-bold pointer-events-none"
               style={{
                 top: '50%',
                 left: '50%',
-                transform: `translate(-50%, -50%) scale(${1 / scale})`,
+                transform: `translate(-50%, -50%)`,
+                fontSize: `${18 / scale}px`,
                 opacity: Math.min(1, Math.max(0, (2.5 - scale) / 2)),
                 textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
                 whiteSpace: 'nowrap',
@@ -1381,13 +1515,14 @@ const ZoomableCanvas = () => {
           )}
           
           {/* High-level view title */}
-          {!selectedSubject && (
+          {!selectedSubject && highLevelDots.length > 1 && (
             <div
-              className="absolute text-white text-xl font-bold pointer-events-none"
+              className="absolute text-white font-bold pointer-events-none"
               style={{
                 top: '50%',
                 left: '50%',
-                transform: `translate(-50%, -50%) scale(${1 / scale})`,
+                transform: `translate(-50%, -50%)`,
+                fontSize: `${20 / scale}px`,
                 opacity: Math.min(1, Math.max(0, (2.5 - scale) / 2)),
                 textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
                 whiteSpace: 'nowrap',
@@ -1400,13 +1535,14 @@ const ZoomableCanvas = () => {
 
           {/* Connection Lines */}
           <svg 
-            className="absolute pointer-events-none" 
+            className="absolute" 
             style={{
               left: 0,
               top: 0,
               width: '100%',
               height: '100%',
-              overflow: 'visible'
+              overflow: 'visible',
+              pointerEvents: 'none'
             }}
           >
             {/* Hierarchical Lines (Solid) - Parent to Child */}
@@ -1415,13 +1551,14 @@ const ZoomableCanvas = () => {
               const targetDot = dots.find(d => d.id === line.target);
               if (!sourceDot || !targetDot) return null;
               
+              const isConnectedToHoveredDot = hoveredDot && (line.source === hoveredDot.id || line.target === hoveredDot.id);
               const isHighlighted = selectedDot?.id === line.source || selectedDot?.id === line.target;
               
-              // Scale line width with zoom, with min/max limits
-              const baseStrokeWidth = isHighlighted ? 3 : 2.5;
+              // Keep line width consistent regardless of zoom
+              const baseStrokeWidth = (isConnectedToHoveredDot || isHighlighted) ? 3 : 2.5;
               const minStrokeWidth = 0.5;
               const maxStrokeWidth = 8;
-              const scaledStrokeWidth = Math.max(minStrokeWidth, Math.min(maxStrokeWidth, baseStrokeWidth * scale));
+              const scaledStrokeWidth = Math.max(minStrokeWidth, Math.min(maxStrokeWidth, baseStrokeWidth / scale));
               
               return (
                 <line
@@ -1430,7 +1567,11 @@ const ZoomableCanvas = () => {
                   y1={sourceDot.y}
                   x2={targetDot.x}
                   y2={targetDot.y}
-                  stroke={isHighlighted ? 'rgba(100, 200, 255, 0.9)' : 'rgba(150, 150, 200, 0.5)'}
+                  stroke={
+                    isConnectedToHoveredDot ? 'rgba(100, 200, 255, 0.95)' :
+                    isHighlighted ? 'rgba(100, 200, 255, 0.9)' : 
+                    'rgba(150, 150, 200, 0.5)'
+                  }
                   strokeWidth={scaledStrokeWidth}
                   style={{
                     transition: 'stroke 0.3s ease-out, stroke-width 0.2s ease-out',
@@ -1440,37 +1581,85 @@ const ZoomableCanvas = () => {
             })}
 
             {/* Connection Lines (Dotted) - Related Concepts */}
-            {lines.connections?.map((line) => {
+            {lines.connections?.filter(line => {
+              // If a dot is selected, only show connections directly related to it
+              if (selectedDot) {
+                return line.source === selectedDot.id || line.target === selectedDot.id;
+              }
+              // If no dot is selected, show all connections
+              return true;
+            }).map((line) => {
               const sourceDot = dots.find(d => d.id === line.source);
               const targetDot = dots.find(d => d.id === line.target);
               if (!sourceDot || !targetDot) return null;
               
+              const lineKey = `${line.source}-${line.target}`;
+              const isLineHovered = hoveredLine === lineKey;
+              const isConnectedToHoveredDot = hoveredDot && (line.source === hoveredDot.id || line.target === hoveredDot.id);
               const isHighlighted = selectedDot?.id === line.source || selectedDot?.id === line.target;
               
-              // Scale line width with zoom, with min/max limits
-              const baseStrokeWidth = 2;
+              // Keep line width consistent regardless of zoom
+              const baseStrokeWidth = (isLineHovered || isConnectedToHoveredDot) ? 3 : 2;
               const minStrokeWidth = 0.5;
-              const maxStrokeWidth = 6;
-              const scaledStrokeWidth = Math.max(minStrokeWidth, Math.min(maxStrokeWidth, baseStrokeWidth * scale));
+              const maxStrokeWidth = 8;
+              const scaledStrokeWidth = Math.max(minStrokeWidth, Math.min(maxStrokeWidth, baseStrokeWidth / scale));
               
-              // Scale dash array with zoom
-              const dashLength = Math.max(4, Math.min(16, 8 * scale));
-              const dashGap = Math.max(2, Math.min(8, 4 * scale));
+              // Keep dash pattern consistent with zoom
+              const dashLength = Math.max(4, Math.min(16, 8 / scale));
+              const dashGap = Math.max(2, Math.min(8, 4 / scale));
+              
+              // Determine which dot to navigate to when line is clicked
+              const targetDotToNavigate = selectedDot?.id === line.source ? targetDot : sourceDot;
               
               return (
-                <line
-                  key={`connection-${line.source}-${line.target}`}
-                  x1={sourceDot.x}
-                  y1={sourceDot.y}
-                  x2={targetDot.x}
-                  y2={targetDot.y}
-                  stroke={isHighlighted ? 'rgba(100, 200, 255, 0.8)' : 'rgba(100, 150, 255, 0.3)'}
-                  strokeWidth={scaledStrokeWidth}
-                  strokeDasharray={`${dashLength} ${dashGap}`}
-                  style={{
-                    transition: 'stroke 0.3s ease-out, stroke-width 0.2s ease-out, stroke-dasharray 0.2s ease-out',
-                  }}
-                />
+                <g key={`connection-${lineKey}`}>
+                  {/* Invisible thicker line for easier clicking */}
+                  <line
+                    x1={sourceDot.x}
+                    y1={sourceDot.y}
+                    x2={targetDot.x}
+                    y2={targetDot.y}
+                    stroke="transparent"
+                    strokeWidth={Math.max(10 / scale, scaledStrokeWidth * 5)}
+                    style={{
+                      pointerEvents: selectedDot ? 'stroke' : 'none',
+                      cursor: selectedDot ? 'pointer' : 'default',
+                    }}
+                    onMouseEnter={() => {
+                      if (selectedDot) {
+                        setHoveredLine(lineKey);
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      setHoveredLine(null);
+                    }}
+                    onClick={(e) => {
+                      if (selectedDot) {
+                        e.stopPropagation();
+                        handleDotClick(targetDotToNavigate);
+                      }
+                    }}
+                  />
+                  {/* Visible line */}
+                  <line
+                    x1={sourceDot.x}
+                    y1={sourceDot.y}
+                    x2={targetDot.x}
+                    y2={targetDot.y}
+                    stroke={
+                      isLineHovered ? 'rgba(100, 200, 255, 1)' : 
+                      isConnectedToHoveredDot ? 'rgba(100, 200, 255, 0.9)' :
+                      isHighlighted ? 'rgba(100, 200, 255, 0.8)' : 
+                      'rgba(100, 150, 255, 0.3)'
+                    }
+                    strokeWidth={scaledStrokeWidth}
+                    strokeDasharray={`${dashLength} ${dashGap}`}
+                    style={{
+                      transition: 'stroke 0.3s ease-out, stroke-width 0.2s ease-out, stroke-dasharray 0.2s ease-out',
+                      pointerEvents: 'none',
+                    }}
+                  />
+                </g>
               );
             })}
           </svg>
@@ -1478,24 +1667,27 @@ const ZoomableCanvas = () => {
           {dots.map((dot) => {
             const proximityOpacity = getProximityOpacity(dot.x, dot.y);
             const isSubtopic = isSubtopicOfHovered(dot);
+            const isHovered = hoveredDot?.id === dot.id;
             
             // Show proximity label if:
-            // 1. Within proximity radius AND not hovering AND not dragging
+            // 1. Within proximity radius
             // 2. OR it's a subtopic of the currently hovered dot
+            // 3. OR it's the currently hovered dot itself
             const showProximityLabel = (
-              (proximityOpacity > 0 && !hoveredDot && !isDragging) ||
-              (isSubtopic && !isDragging)
-            ) && dot.id !== hoveredDot?.id; // Don't show label for the hovered dot itself
+              proximityOpacity > 0 ||
+              isSubtopic ||
+              isHovered
+            );
             
-            // Use full opacity for subtopics, proximity-based for others
-            const labelOpacity = isSubtopic ? 0.95 : proximityOpacity * 0.9;
+            // Use full opacity for hovered dot and subtopics, proximity-based for others
+            const labelOpacity = isHovered ? 1 : isSubtopic ? 0.95 : proximityOpacity * 0.9;
             
-            // Calculate dot size based on zoom level with min/max limits
-            // Base size scales with zoom, but clamped between min and max
+            // Calculate dot size - keep visual size consistent regardless of zoom
+            // Divide by scale to counteract the zoom transformation
             const baseSize = dot.size * 6;
             const minSize = 4; // Minimum dot size in pixels
             const maxSize = 120; // Maximum dot size in pixels
-            const scaledSize = Math.max(minSize, Math.min(maxSize, baseSize * scale));
+            const scaledSize = Math.max(minSize, Math.min(maxSize, baseSize / scale));
             
             return (
               <div
@@ -1515,16 +1707,18 @@ const ZoomableCanvas = () => {
                 {/* Proximity label - fades in as cursor gets closer */}
                 {showProximityLabel && (
                   <div 
-                    className="absolute text-white text-sm font-semibold pointer-events-none"
+                    className="absolute text-white font-semibold pointer-events-none"
                     style={{
-                      top: `${-scaledSize / 2 - 8}px`,
+                      top: `${-scaledSize / 2 - (isHovered ? 12 : 8)}px`,
                       left: '50%',
-                      transform: `translateX(-50%)`,
+                      transform: `translateX(-50%) scale(${isHovered ? 1.2 : 1})`,
                       opacity: labelOpacity,
-                      textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5)',
+                      textShadow: isHovered 
+                        ? '2px 2px 4px rgba(0, 0, 0, 0.9), 0 0 15px rgba(0, 0, 0, 0.6)' 
+                        : '1px 1px 3px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5)',
                       whiteSpace: 'nowrap',
-                      transition: 'opacity 0.2s ease-out, top 0.2s ease-out',
-                      fontSize: `${Math.max(10, Math.min(16, 14 * scale))}px`,
+                      transition: 'opacity 0.2s ease-out, top 0.2s ease-out, transform 0.2s ease-out, font-size 0.2s ease-out',
+                      fontSize: `${Math.max(10, Math.min(16, 14 / scale))}px`,
                       color: isSubtopic ? '#E9D5FF' : '#FFFFFF', // Lighter purple tint for subtopics
                     }}
                   >
@@ -1544,7 +1738,7 @@ const ZoomableCanvas = () => {
                       textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
                       whiteSpace: 'nowrap',
                       transition: 'opacity 0.3s ease-out, top 0.3s ease-out',
-                      fontSize: `${Math.max(12, Math.min(20, 18 * scale))}px`,
+                      fontSize: `${Math.max(12, Math.min(20, 18 / scale))}px`,
                     }}
                   >
                     {dot.text}
@@ -1559,22 +1753,15 @@ const ZoomableCanvas = () => {
                     backgroundColor: dot.color,
                     transition: 'width 0.2s ease-out, height 0.2s ease-out, box-shadow 0.3s ease-out',
                     boxShadow: selectedDot?.id === dot.id 
-                      ? `0 0 ${15 * scale}px ${5 * scale}px rgba(100, 200, 255, 0.6), 0 0 ${30 * scale}px ${10 * scale}px rgba(100, 200, 255, 0.4), 0 0 ${45 * scale}px ${15 * scale}px rgba(100, 200, 255, 0.2)`
+                      ? `0 0 ${15 / scale}px ${5 / scale}px rgba(100, 200, 255, 0.6), 0 0 ${30 / scale}px ${10 / scale}px rgba(100, 200, 255, 0.4), 0 0 ${45 / scale}px ${15 / scale}px rgba(100, 200, 255, 0.2)`
                       : hoveredDot?.id === dot.id
-                      ? `0 0 ${10 * scale}px ${3 * scale}px rgba(255, 255, 255, 0.8), 0 0 ${20 * scale}px ${6 * scale}px rgba(255, 255, 255, 0.4)`
+                      ? `0 0 ${10 / scale}px ${3 / scale}px rgba(255, 255, 255, 0.8), 0 0 ${20 / scale}px ${6 / scale}px rgba(255, 255, 255, 0.4)`
                       : isSubtopic
-                      ? `0 0 ${8 * scale}px ${2 * scale}px rgba(233, 213, 255, 0.6), 0 0 ${16 * scale}px ${4 * scale}px rgba(233, 213, 255, 0.3)`
-                      : `0 ${2 * scale}px ${4 * scale}px rgba(0, 0, 0, 0.1)`,
+                      ? `0 0 ${8 / scale}px ${2 / scale}px rgba(233, 213, 255, 0.6), 0 0 ${16 / scale}px ${4 / scale}px rgba(233, 213, 255, 0.3)`
+                      : `0 ${2 / scale}px ${4 / scale}px rgba(0, 0, 0, 0.1)`,
                     pointerEvents: 'none',
                   }}
                 />
-                
-                {/* Hover tooltip - only shows on direct hover */}
-                {hoveredDot?.id === dot.id && (
-                  <div className="absolute left-6 top-0 bg-white px-3 py-2 rounded-lg shadow-lg whitespace-nowrap text-black">
-                    {dot.text}
-                  </div>
-                )}
               </div>
             );
           })}
@@ -1591,6 +1778,27 @@ const ZoomableCanvas = () => {
       )}
 
       {showPathsModal && <PathsModal />}
+
+      {/* Line Hover Tooltip */}
+      {hoveredLine && selectedDot && (() => {
+        const [source, target] = hoveredLine.split('-');
+        const targetDot = dots.find(d => d.id === (selectedDot.id === source ? target : source));
+        if (!targetDot) return null;
+        
+        return (
+          <div 
+            className="fixed pointer-events-none z-50"
+            style={{
+              left: mousePosition.x + 15,
+              top: mousePosition.y + 15,
+            }}
+          >
+            <div className="bg-white px-3 py-2 rounded-lg shadow-lg whitespace-nowrap text-black border border-gray-200">
+              <span className="text-sm">Navigate to <span className="font-semibold">{targetDot.text}</span></span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Full Content Modal */}
       {showFullContent && selectedDot && (

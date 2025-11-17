@@ -1,0 +1,2066 @@
+{
+  "dots": [
+    {
+      "id": 1,
+      "size": 6,
+      "text": "Introduction and Algorithm Analysis",
+      "parentId": null,
+      "details": "Introduction and Algorithm Analysis - 1",
+      "fullContent": "Introduction and Algorithm Analysis",
+      "implementations": [],
+      "relationships": [],
+      "connections": [],
+      "children": [
+        {
+          "id": 2,
+          "size": 4,
+          "text": "Fundamentals of Algorithms",
+          "parentId": 1,
+          "details": "Fundamentals of Algorithms - 1.1",
+          "fullContent": "Fundamentals of Algorithms",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 3,
+              "size": 3,
+              "text": "What is an Algorithm?",
+              "parentId": 2,
+              "details": "Definition, properties (finiteness, definiteness, input, output, effectiveness)....",
+              "fullContent": "Definition, properties (finiteness, definiteness, input, output, effectiveness).",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                4,
+                5,
+                7,
+                8,
+                9,
+                47,
+                48,
+                50
+              ],
+              "color": "rgb(197, 158, 167)",
+              "x": "centerX + 502",
+              "y": "centerY + 267"
+            },
+            {
+              "id": 4,
+              "size": 3,
+              "text": "Problem Solving with Algorithms",
+              "parentId": 2,
+              "details": "Steps: problem definition, algorithm design, implementation, testing, analysis....",
+              "fullContent": "Steps: problem definition, algorithm design, implementation, testing, analysis.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                3,
+                5,
+                7,
+                8,
+                9,
+                50,
+                53,
+                56
+              ],
+              "color": "rgb(197, 158, 167)",
+              "x": "centerX + 413",
+              "y": "centerY + 110"
+            },
+            {
+              "id": 5,
+              "size": 3,
+              "text": "Pseudocode and Basic Control Structures",
+              "parentId": 2,
+              "details": "Writing clear algorithms using sequence, selection, and iteration....",
+              "fullContent": "Writing clear algorithms using sequence, selection, and iteration.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                3,
+                4,
+                12,
+                15,
+                16,
+                24,
+                47
+              ],
+              "color": "rgb(197, 158, 167)",
+              "x": "centerX + 594",
+              "y": "centerY + 111"
+            }
+          ],
+          "color": "rgb(197, 158, 167)",
+          "x": "centerX + 503",
+          "y": "centerY + 163"
+        },
+        {
+          "id": 6,
+          "size": 4,
+          "text": "Algorithm Analysis",
+          "parentId": 1,
+          "details": "Algorithm Analysis - 1.2",
+          "fullContent": "Algorithm Analysis",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 7,
+              "size": 3,
+              "text": "Asymptotic Notation",
+              "parentId": 6,
+              "details": "Big-O, Big-Omega, Big-Theta; defining upper, lower, and tight bounds....",
+              "fullContent": "Big-O, Big-Omega, Big-Theta; defining upper, lower, and tight bounds.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                8,
+                9,
+                12,
+                13,
+                21,
+                29,
+                47,
+                48
+              ],
+              "color": "rgb(197, 158, 167)",
+              "x": "centerX + 308",
+              "y": "centerY + -63"
+            },
+            {
+              "id": 8,
+              "size": 3,
+              "text": "Time and Space Complexity",
+              "parentId": 6,
+              "details": "Analyzing worst-case, average-case, and best-case runtime and memory usage....",
+              "fullContent": "Analyzing worst-case, average-case, and best-case runtime and memory usage.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                7,
+                9,
+                12,
+                13,
+                21,
+                29,
+                38,
+                40
+              ],
+              "color": "rgb(197, 158, 167)",
+              "x": "centerX + 217",
+              "y": "centerY + -222"
+            },
+            {
+              "id": 9,
+              "size": 3,
+              "text": "Analyzing Iterative and Recursive Algorithms",
+              "parentId": 6,
+              "details": "Summation for loops; solving recurrence relations (e.g., Master Theorem) for recursion....",
+              "fullContent": "Summation for loops; solving recurrence relations (e.g., Master Theorem) for recursion.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                7,
+                8,
+                24,
+                25,
+                48,
+                50,
+                56
+              ],
+              "color": "rgb(197, 158, 167)",
+              "x": "centerX + 402",
+              "y": "centerY + -218"
+            }
+          ],
+          "color": "rgb(197, 158, 167)",
+          "x": "centerX + 310",
+          "y": "centerY + -167"
+        }
+      ],
+      "color": "rgb(197, 158, 167)",
+      "x": "centerX + 407",
+      "y": "centerY + 0"
+    },
+    {
+      "id": 10,
+      "size": 6,
+      "text": "Fundamental Data Structures",
+      "parentId": null,
+      "details": "Fundamental Data Structures - 2",
+      "fullContent": "Fundamental Data Structures",
+      "implementations": [],
+      "relationships": [],
+      "connections": [],
+      "children": [
+        {
+          "id": 11,
+          "size": 4,
+          "text": "Arrays and Linked Lists",
+          "parentId": 10,
+          "details": "Arrays and Linked Lists - 2.1",
+          "fullContent": "Arrays and Linked Lists",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 12,
+              "size": 3,
+              "text": "Arrays",
+              "parentId": 11,
+              "details": "Static and dynamic arrays, memory representation, access, insertion, deletion....",
+              "fullContent": "Static and dynamic arrays, memory representation, access, insertion, deletion.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                13,
+                15,
+                16,
+                17,
+                19,
+                20,
+                32,
+                47
+              ],
+              "color": "rgb(255, 143, 255)",
+              "x": "centerX + 218",
+              "y": "centerY + 648"
+            },
+            {
+              "id": 13,
+              "size": 3,
+              "text": "Singly, Doubly, and Circular Linked Lists",
+              "parentId": 11,
+              "details": "Node structure, traversal, insertion, deletion; comparing advantages/disadvantages vs. arrays....",
+              "fullContent": "Node structure, traversal, insertion, deletion; comparing advantages/disadvantages vs. arrays.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                12,
+                15,
+                16,
+                17,
+                28,
+                29,
+                37
+              ],
+              "color": "rgb(255, 143, 255)",
+              "x": "centerX + 324",
+              "y": "centerY + 467"
+            }
+          ],
+          "color": "rgb(255, 143, 255)",
+          "x": "centerX + 273",
+          "y": "centerY + 558"
+        },
+        {
+          "id": 14,
+          "size": 4,
+          "text": "Stacks and Queues",
+          "parentId": 10,
+          "details": "Stacks and Queues - 2.2",
+          "fullContent": "Stacks and Queues",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 15,
+              "size": 3,
+              "text": "Stack ADT",
+              "parentId": 14,
+              "details": "LIFO principle, push, pop, peek; implementations using array and linked list....",
+              "fullContent": "LIFO principle, push, pop, peek; implementations using array and linked list.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                12,
+                13,
+                16,
+                17,
+                24,
+                25,
+                38,
+                44
+              ],
+              "color": "rgb(255, 143, 255)",
+              "x": "centerX + -47",
+              "y": "centerY + 582"
+            },
+            {
+              "id": 16,
+              "size": 3,
+              "text": "Queue ADT",
+              "parentId": 14,
+              "details": "FIFO principle, enqueue, dequeue; implementations (array, linked list)....",
+              "fullContent": "FIFO principle, enqueue, dequeue; implementations (array, linked list).",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                12,
+                13,
+                15,
+                17,
+                34,
+                38,
+                40,
+                44
+              ],
+              "color": "rgb(255, 143, 255)",
+              "x": "centerX + -136",
+              "y": "centerY + 420"
+            },
+            {
+              "id": 17,
+              "size": 3,
+              "text": "Deque and Priority Queue",
+              "parentId": 14,
+              "details": "Double-ended queue; priority queue concept and simple implementations....",
+              "fullContent": "Double-ended queue; priority queue concept and simple implementations.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                12,
+                13,
+                15,
+                16,
+                34,
+                40,
+                44
+              ],
+              "color": "rgb(255, 143, 255)",
+              "x": "centerX + 46",
+              "y": "centerY + 421"
+            }
+          ],
+          "color": "rgb(255, 143, 255)",
+          "x": "centerX + -45",
+          "y": "centerY + 474"
+        },
+        {
+          "id": 18,
+          "size": 4,
+          "text": "Hash Tables",
+          "parentId": 10,
+          "details": "Hash Tables - 2.3",
+          "fullContent": "Hash Tables",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 19,
+              "size": 3,
+              "text": "Hash Functions",
+              "parentId": 18,
+              "details": "Properties of a good hash function, common hash functions for integers/strings....",
+              "fullContent": "Properties of a good hash function, common hash functions for integers/strings.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                20,
+                21,
+                48,
+                54
+              ],
+              "color": "rgb(255, 143, 255)",
+              "x": "centerX + 189",
+              "y": "centerY + 342"
+            },
+            {
+              "id": 20,
+              "size": 3,
+              "text": "Collision Resolution",
+              "parentId": 18,
+              "details": "Separate Chaining and Open Addressing (Linear Probing, Quadratic Probing, Double Hashing)....",
+              "fullContent": "Separate Chaining and Open Addressing (Linear Probing, Quadratic Probing, Double Hashing).",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                19,
+                21
+              ],
+              "color": "rgb(255, 143, 255)",
+              "x": "centerX + 96",
+              "y": "centerY + 185"
+            },
+            {
+              "id": 21,
+              "size": 3,
+              "text": "Time Complexity Analysis",
+              "parentId": 18,
+              "details": "Analyzing search, insert, delete under average and worst-case assumptions....",
+              "fullContent": "Analyzing search, insert, delete under average and worst-case assumptions.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                7,
+                8,
+                19,
+                20,
+                29,
+                30,
+                38
+              ],
+              "color": "rgb(255, 143, 255)",
+              "x": "centerX + 281",
+              "y": "centerY + 186"
+            }
+          ],
+          "color": "rgb(255, 143, 255)",
+          "x": "centerX + 187",
+          "y": "centerY + 237"
+        }
+      ],
+      "color": "rgb(255, 143, 255)",
+      "x": "centerX + 138",
+      "y": "centerY + 423"
+    },
+    {
+      "id": 22,
+      "size": 6,
+      "text": "Recursion and Advanced Data Structures",
+      "parentId": null,
+      "details": "Recursion and Advanced Data Structures - 3",
+      "fullContent": "Recursion and Advanced Data Structures",
+      "implementations": [],
+      "relationships": [],
+      "connections": [],
+      "children": [
+        {
+          "id": 23,
+          "size": 4,
+          "text": "Recursion",
+          "parentId": 22,
+          "details": "Recursion - 3.1",
+          "fullContent": "Recursion",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 24,
+              "size": 3,
+              "text": "Principles of Recursion",
+              "parentId": 23,
+              "details": "Base case, recursive case, call stack, solving problems recursively....",
+              "fullContent": "Base case, recursive case, call stack, solving problems recursively.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                9,
+                25,
+                26,
+                28,
+                38,
+                48,
+                50,
+                56
+              ],
+              "color": "rgb(187, 255, 243)",
+              "x": "centerX + -234",
+              "y": "centerY + 506"
+            },
+            {
+              "id": 25,
+              "size": 3,
+              "text": "Tree and Graph Traversal Recursively",
+              "parentId": 23,
+              "details": "Applying recursion to traverse hierarchical structures like trees....",
+              "fullContent": "Applying recursion to traverse hierarchical structures like trees.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                24,
+                28,
+                38,
+                26
+              ],
+              "color": "rgb(187, 255, 243)",
+              "x": "centerX + -324",
+              "y": "centerY + 348"
+            },
+            {
+              "id": 26,
+              "size": 3,
+              "text": "Backtracking Algorithms",
+              "parentId": 23,
+              "details": "Solving problems like N-Queens, Sudoku by trying possibilities and undoing (backtracking) failures....",
+              "fullContent": "Solving problems like N-Queens, Sudoku by trying possibilities and undoing (backtracking) failures.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                24,
+                25,
+                57
+              ],
+              "color": "rgb(187, 255, 243)",
+              "x": "centerX + -139",
+              "y": "centerY + 346"
+            }
+          ],
+          "color": "rgb(187, 255, 243)",
+          "x": "centerX + -232",
+          "y": "centerY + 400"
+        },
+        {
+          "id": 27,
+          "size": 4,
+          "text": "Trees",
+          "parentId": 22,
+          "details": "Trees - 3.2",
+          "fullContent": "Trees",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 28,
+              "size": 3,
+              "text": "Tree Terminology and Binary Trees",
+              "parentId": 27,
+              "details": "Root, node, leaf, height, depth; binary tree properties and traversals (in-order, pre-order, post-order)....",
+              "fullContent": "Root, node, leaf, height, depth; binary tree properties and traversals (in-order, pre-order, post-order).",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                25,
+                29,
+                32,
+                38
+              ],
+              "color": "rgb(187, 255, 243)",
+              "x": "centerX + -553",
+              "y": "centerY + 426"
+            },
+            {
+              "id": 29,
+              "size": 3,
+              "text": "Binary Search Trees (BST)",
+              "parentId": 27,
+              "details": "BST property, search, insertion, deletion; time complexity analysis....",
+              "fullContent": "BST property, search, insertion, deletion; time complexity analysis.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                28,
+                30,
+                7,
+                8
+              ],
+              "color": "rgb(187, 255, 243)",
+              "x": "centerX + -645",
+              "y": "centerY + 266"
+            },
+            {
+              "id": 30,
+              "size": 3,
+              "text": "Balanced BSTs (AVL Trees)",
+              "parentId": 27,
+              "details": "Concept of balance, rotations (single, double) to maintain AVL property....",
+              "fullContent": "Concept of balance, rotations (single, double) to maintain AVL property.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                29,
+                28
+              ],
+              "color": "rgb(187, 255, 243)",
+              "x": "centerX + -462",
+              "y": "centerY + 264"
+            }
+          ],
+          "color": "rgb(187, 255, 243)",
+          "x": "centerX + -552",
+          "y": "centerY + 318"
+        },
+        {
+          "id": 31,
+          "size": 4,
+          "text": "Heaps",
+          "parentId": 22,
+          "details": "Heaps - 3.3",
+          "fullContent": "Heaps",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 32,
+              "size": 3,
+              "text": "Binary Heap Structure",
+              "parentId": 31,
+              "details": "Complete binary tree, heap order property (min-heap, max-heap)....",
+              "fullContent": "Complete binary tree, heap order property (min-heap, max-heap).",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                33,
+                34,
+                28
+              ],
+              "color": "rgb(187, 255, 243)",
+              "x": "centerX + -318",
+              "y": "centerY + 189"
+            },
+            {
+              "id": 33,
+              "size": 3,
+              "text": "Heap Operations",
+              "parentId": 31,
+              "details": "Insert (bubble-up), extract-min/max (bubble-down), heapify....",
+              "fullContent": "Insert (bubble-up), extract-min/max (bubble-down), heapify.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                32,
+                34
+              ],
+              "color": "rgb(187, 255, 243)",
+              "x": "centerX + -411",
+              "y": "centerY + 30"
+            },
+            {
+              "id": 34,
+              "size": 3,
+              "text": "Applications of Heaps",
+              "parentId": 31,
+              "details": "Heap Sort algorithm, Priority Queue implementation....",
+              "fullContent": "Heap Sort algorithm, Priority Queue implementation.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                32,
+                33,
+                17,
+                48
+              ],
+              "color": "rgb(187, 255, 243)",
+              "x": "centerX + -227",
+              "y": "centerY + 31"
+            }
+          ],
+          "color": "rgb(187, 255, 243)",
+          "x": "centerX + -318",
+          "y": "centerY + 83"
+        }
+      ],
+      "color": "rgb(187, 255, 243)",
+      "x": "centerX + -367",
+      "y": "centerY + 266"
+    },
+    {
+      "id": 35,
+      "size": 6,
+      "text": "Graph Algorithms",
+      "parentId": null,
+      "details": "Graph Algorithms - 4",
+      "fullContent": "Graph Algorithms",
+      "implementations": [],
+      "relationships": [],
+      "connections": [],
+      "children": [
+        {
+          "id": 36,
+          "size": 4,
+          "text": "Graph Fundamentals",
+          "parentId": 35,
+          "details": "Graph Fundamentals - 4.1",
+          "fullContent": "Graph Fundamentals",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 37,
+              "size": 3,
+              "text": "Graph Terminology and Representations",
+              "parentId": 36,
+              "details": "Vertices, edges, directed/undirected, weighted/unweighted; adjacency matrix and adjacency list....",
+              "fullContent": "Vertices, edges, directed/undirected, weighted/unweighted; adjacency matrix and adjacency list.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                38,
+                12,
+                13
+              ],
+              "color": "rgb(194, 155, 205)",
+              "x": "centerX + -229",
+              "y": "centerY + 1"
+            },
+            {
+              "id": 38,
+              "size": 3,
+              "text": "Graph Traversal Algorithms",
+              "parentId": 36,
+              "details": "Breadth-First Search (BFS) and Depth-First Search (DFS); applications and time complexity....",
+              "fullContent": "Breadth-First Search (BFS) and Depth-First Search (DFS); applications and time complexity.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                37,
+                25,
+                40,
+                44
+              ],
+              "color": "rgb(194, 155, 205)",
+              "x": "centerX + -122",
+              "y": "centerY + -180"
+            }
+          ],
+          "color": "rgb(194, 155, 205)",
+          "x": "centerX + -174",
+          "y": "centerY + -90"
+        },
+        {
+          "id": 39,
+          "size": 4,
+          "text": "Shortest Path Problems",
+          "parentId": 35,
+          "details": "Shortest Path Problems - 4.2",
+          "fullContent": "Shortest Path Problems",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 40,
+              "size": 3,
+              "text": "Dijkstra's Algorithm",
+              "parentId": 39,
+              "details": "Finding shortest paths from a single source in weighted graphs (non-negative weights)....",
+              "fullContent": "Finding shortest paths from a single source in weighted graphs (non-negative weights).",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                38,
+                41,
+                17,
+                34
+              ],
+              "color": "rgb(194, 155, 205)",
+              "x": "centerX + -548",
+              "y": "centerY + -84"
+            },
+            {
+              "id": 41,
+              "size": 3,
+              "text": "Bellman-Ford Algorithm",
+              "parentId": 39,
+              "details": "Finding shortest paths from a single source, can handle negative weight edges (detects negative cycles)....",
+              "fullContent": "Finding shortest paths from a single source, can handle negative weight edges (detects negative cycles).",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                40,
+                38
+              ],
+              "color": "rgb(194, 155, 205)",
+              "x": "centerX + -442",
+              "y": "centerY + -268"
+            }
+          ],
+          "color": "rgb(194, 155, 205)",
+          "x": "centerX + -495",
+          "y": "centerY + -176"
+        },
+        {
+          "id": 42,
+          "size": 4,
+          "text": "Minimum Spanning Tree (MST)",
+          "parentId": 35,
+          "details": "Minimum Spanning Tree (MST) - 4.3",
+          "fullContent": "Minimum Spanning Tree (MST)",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 43,
+              "size": 3,
+              "text": "Kruskal's Algorithm",
+              "parentId": 42,
+              "details": "Greedy algorithm using a union-find (disjoint set) data structure to build MST....",
+              "fullContent": "Greedy algorithm using a union-find (disjoint set) data structure to build MST.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                44,
+                37,
+                38
+              ],
+              "color": "rgb(194, 155, 205)",
+              "x": "centerX + -315",
+              "y": "centerY + -318"
+            },
+            {
+              "id": 44,
+              "size": 3,
+              "text": "Prim's Algorithm",
+              "parentId": 42,
+              "details": "Greedy algorithm growing the MST from an arbitrary starting vertex, typically using a priority queue....",
+              "fullContent": "Greedy algorithm growing the MST from an arbitrary starting vertex, typically using a priority queue.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                43,
+                38,
+                34,
+                17
+              ],
+              "color": "rgb(194, 155, 205)",
+              "x": "centerX + -208",
+              "y": "centerY + -502"
+            }
+          ],
+          "color": "rgb(194, 155, 205)",
+          "x": "centerX + -262",
+          "y": "centerY + -409"
+        }
+      ],
+      "color": "rgb(194, 155, 205)",
+      "x": "centerX + -311",
+      "y": "centerY + -226"
+    },
+    {
+      "id": 45,
+      "size": 6,
+      "text": "Algorithm Design Techniques",
+      "parentId": null,
+      "details": "Algorithm Design Techniques - 5",
+      "fullContent": "Algorithm Design Techniques",
+      "implementations": [],
+      "relationships": [],
+      "connections": [],
+      "children": [
+        {
+          "id": 46,
+          "size": 4,
+          "text": "Sorting Algorithms",
+          "parentId": 45,
+          "details": "Sorting Algorithms - 5.1",
+          "fullContent": "Sorting Algorithms",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 47,
+              "size": 3,
+              "text": "Elementary Sorts",
+              "parentId": 46,
+              "details": "Bubble Sort, Selection Sort, Insertion Sort; analysis and comparison....",
+              "fullContent": "Bubble Sort, Selection Sort, Insertion Sort; analysis and comparison.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                48,
+                7,
+                8
+              ],
+              "color": "rgb(255, 255, 255)",
+              "x": "centerX + 238",
+              "y": "centerY + -225"
+            },
+            {
+              "id": 48,
+              "size": 3,
+              "text": "Divide-and-Conquer Sorts",
+              "parentId": 46,
+              "details": "Merge Sort (stable, O(n log n)) and Quick Sort (in-place, average-case O(n log n))....",
+              "fullContent": "Merge Sort (stable, O(n log n)) and Quick Sort (in-place, average-case O(n log n)).",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                47,
+                49,
+                50,
+                57,
+                9,
+                24,
+                8
+              ],
+              "color": "rgb(255, 255, 255)",
+              "x": "centerX + 344",
+              "y": "centerY + -412"
+            }
+          ],
+          "color": "rgb(255, 255, 255)",
+          "x": "centerX + 292",
+          "y": "centerY + -318"
+        },
+        {
+          "id": 49,
+          "size": 4,
+          "text": "Divide and Conquer",
+          "parentId": 45,
+          "details": "Divide and Conquer - 5.2",
+          "fullContent": "Divide and Conquer",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 50,
+              "size": 3,
+              "text": "Paradigm Overview",
+              "parentId": 49,
+              "details": "Divide problem into subproblems, conquer subproblems, combine results....",
+              "fullContent": "Divide problem into subproblems, conquer subproblems, combine results.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                48,
+                49,
+                51,
+                24,
+                56,
+                9
+              ],
+              "color": "rgb(255, 255, 255)",
+              "x": "centerX + -23",
+              "y": "centerY + -185"
+            },
+            {
+              "id": 51,
+              "size": 3,
+              "text": "Example Problems",
+              "parentId": 49,
+              "details": "Binary Search, finding maximum subarray sum, Strassen's matrix multiplication....",
+              "fullContent": "Binary Search, finding maximum subarray sum, Strassen's matrix multiplication.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                50,
+                12,
+                7,
+                8,
+                9,
+                24
+              ],
+              "color": "rgb(255, 255, 255)",
+              "x": "centerX + 80",
+              "y": "centerY + -369"
+            }
+          ],
+          "color": "rgb(255, 255, 255)",
+          "x": "centerX + 29",
+          "y": "centerY + -275"
+        },
+        {
+          "id": 52,
+          "size": 4,
+          "text": "Greedy Algorithms",
+          "parentId": 45,
+          "details": "Greedy Algorithms - 5.3",
+          "fullContent": "Greedy Algorithms",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 53,
+              "size": 3,
+              "text": "Greedy Choice Property",
+              "parentId": 52,
+              "details": "Making the locally optimal choice at each stage with the hope of a global optimum....",
+              "fullContent": "Making the locally optimal choice at each stage with the hope of a global optimum.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                54,
+                52,
+                56,
+                43,
+                44
+              ],
+              "color": "rgb(255, 255, 255)",
+              "x": "centerX + -66",
+              "y": "centerY + -449"
+            },
+            {
+              "id": 54,
+              "size": 3,
+              "text": "Example Problems",
+              "parentId": 52,
+              "details": "Activity Selection, Huffman Coding, Fractional Knapsack....",
+              "fullContent": "Activity Selection, Huffman Coding, Fractional Knapsack.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                53,
+                52,
+                58,
+                42,
+                34
+              ],
+              "color": "rgb(255, 255, 255)",
+              "x": "centerX + 37",
+              "y": "centerY + -636"
+            }
+          ],
+          "color": "rgb(255, 255, 255)",
+          "x": "centerX + -14",
+          "y": "centerY + -542"
+        },
+        {
+          "id": 55,
+          "size": 4,
+          "text": "Dynamic Programming",
+          "parentId": 45,
+          "details": "Dynamic Programming - 5.4",
+          "fullContent": "Dynamic Programming",
+          "implementations": [],
+          "relationships": [],
+          "connections": [],
+          "children": [
+            {
+              "id": 56,
+              "size": 3,
+              "text": "Principle of Optimality",
+              "parentId": 55,
+              "details": "Breaking problems into overlapping subproblems and storing results (memoization)....",
+              "fullContent": "Breaking problems into overlapping subproblems and storing results (memoization).",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                55,
+                57,
+                58,
+                50,
+                9,
+                24
+              ],
+              "color": "rgb(255, 255, 255)",
+              "x": "centerX + 251",
+              "y": "centerY + -481"
+            },
+            {
+              "id": 57,
+              "size": 3,
+              "text": "Tabulation vs Memoization",
+              "parentId": 55,
+              "details": "Bottom-up (table filling) and top-down (recursive with cache) approaches....",
+              "fullContent": "Bottom-up (table filling) and top-down (recursive with cache) approaches.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                56,
+                55,
+                58,
+                24,
+                9,
+                8
+              ],
+              "color": "rgb(255, 255, 255)",
+              "x": "centerX + 159",
+              "y": "centerY + -640"
+            },
+            {
+              "id": 58,
+              "size": 3,
+              "text": "Classic Problems",
+              "parentId": 55,
+              "details": "Fibonacci, 0/1 Knapsack, Longest Common Subsequence, Coin Change....",
+              "fullContent": "Fibonacci, 0/1 Knapsack, Longest Common Subsequence, Coin Change.",
+              "implementations": [],
+              "relationships": [],
+              "connections": [
+                56,
+                57,
+                55,
+                54,
+                51
+              ],
+              "color": "rgb(255, 255, 255)",
+              "x": "centerX + 341",
+              "y": "centerY + -640"
+            }
+          ],
+          "color": "rgb(255, 255, 255)",
+          "x": "centerX + 251",
+          "y": "centerY + -585"
+        }
+      ],
+      "color": "rgb(255, 255, 255)",
+      "x": "centerX + 140",
+      "y": "centerY + -430"
+    }
+  ],
+  "paths": [],
+  "lines": {
+    "hierarchical": [
+      {
+        "source": 1,
+        "target": 2,
+        "type": "hierarchical"
+      },
+      {
+        "source": 1,
+        "target": 6,
+        "type": "hierarchical"
+      },
+      {
+        "source": 2,
+        "target": 3,
+        "type": "hierarchical"
+      },
+      {
+        "source": 2,
+        "target": 4,
+        "type": "hierarchical"
+      },
+      {
+        "source": 2,
+        "target": 5,
+        "type": "hierarchical"
+      },
+      {
+        "source": 6,
+        "target": 7,
+        "type": "hierarchical"
+      },
+      {
+        "source": 6,
+        "target": 8,
+        "type": "hierarchical"
+      },
+      {
+        "source": 6,
+        "target": 9,
+        "type": "hierarchical"
+      },
+      {
+        "source": 10,
+        "target": 11,
+        "type": "hierarchical"
+      },
+      {
+        "source": 10,
+        "target": 14,
+        "type": "hierarchical"
+      },
+      {
+        "source": 10,
+        "target": 18,
+        "type": "hierarchical"
+      },
+      {
+        "source": 11,
+        "target": 12,
+        "type": "hierarchical"
+      },
+      {
+        "source": 11,
+        "target": 13,
+        "type": "hierarchical"
+      },
+      {
+        "source": 14,
+        "target": 15,
+        "type": "hierarchical"
+      },
+      {
+        "source": 14,
+        "target": 16,
+        "type": "hierarchical"
+      },
+      {
+        "source": 14,
+        "target": 17,
+        "type": "hierarchical"
+      },
+      {
+        "source": 18,
+        "target": 19,
+        "type": "hierarchical"
+      },
+      {
+        "source": 18,
+        "target": 20,
+        "type": "hierarchical"
+      },
+      {
+        "source": 18,
+        "target": 21,
+        "type": "hierarchical"
+      },
+      {
+        "source": 22,
+        "target": 23,
+        "type": "hierarchical"
+      },
+      {
+        "source": 22,
+        "target": 27,
+        "type": "hierarchical"
+      },
+      {
+        "source": 22,
+        "target": 31,
+        "type": "hierarchical"
+      },
+      {
+        "source": 23,
+        "target": 24,
+        "type": "hierarchical"
+      },
+      {
+        "source": 23,
+        "target": 25,
+        "type": "hierarchical"
+      },
+      {
+        "source": 23,
+        "target": 26,
+        "type": "hierarchical"
+      },
+      {
+        "source": 27,
+        "target": 28,
+        "type": "hierarchical"
+      },
+      {
+        "source": 27,
+        "target": 29,
+        "type": "hierarchical"
+      },
+      {
+        "source": 27,
+        "target": 30,
+        "type": "hierarchical"
+      },
+      {
+        "source": 31,
+        "target": 32,
+        "type": "hierarchical"
+      },
+      {
+        "source": 31,
+        "target": 33,
+        "type": "hierarchical"
+      },
+      {
+        "source": 31,
+        "target": 34,
+        "type": "hierarchical"
+      },
+      {
+        "source": 35,
+        "target": 36,
+        "type": "hierarchical"
+      },
+      {
+        "source": 35,
+        "target": 39,
+        "type": "hierarchical"
+      },
+      {
+        "source": 35,
+        "target": 42,
+        "type": "hierarchical"
+      },
+      {
+        "source": 36,
+        "target": 37,
+        "type": "hierarchical"
+      },
+      {
+        "source": 36,
+        "target": 38,
+        "type": "hierarchical"
+      },
+      {
+        "source": 39,
+        "target": 40,
+        "type": "hierarchical"
+      },
+      {
+        "source": 39,
+        "target": 41,
+        "type": "hierarchical"
+      },
+      {
+        "source": 42,
+        "target": 43,
+        "type": "hierarchical"
+      },
+      {
+        "source": 42,
+        "target": 44,
+        "type": "hierarchical"
+      },
+      {
+        "source": 45,
+        "target": 46,
+        "type": "hierarchical"
+      },
+      {
+        "source": 45,
+        "target": 49,
+        "type": "hierarchical"
+      },
+      {
+        "source": 45,
+        "target": 52,
+        "type": "hierarchical"
+      },
+      {
+        "source": 45,
+        "target": 55,
+        "type": "hierarchical"
+      },
+      {
+        "source": 46,
+        "target": 47,
+        "type": "hierarchical"
+      },
+      {
+        "source": 46,
+        "target": 48,
+        "type": "hierarchical"
+      },
+      {
+        "source": 49,
+        "target": 50,
+        "type": "hierarchical"
+      },
+      {
+        "source": 49,
+        "target": 51,
+        "type": "hierarchical"
+      },
+      {
+        "source": 52,
+        "target": 53,
+        "type": "hierarchical"
+      },
+      {
+        "source": 52,
+        "target": 54,
+        "type": "hierarchical"
+      },
+      {
+        "source": 55,
+        "target": 56,
+        "type": "hierarchical"
+      },
+      {
+        "source": 55,
+        "target": 57,
+        "type": "hierarchical"
+      },
+      {
+        "source": 55,
+        "target": 58,
+        "type": "hierarchical"
+      }
+    ],
+    "connections": [
+      {
+        "source": 3,
+        "target": 4,
+        "type": "connection"
+      },
+      {
+        "source": 3,
+        "target": 5,
+        "type": "connection"
+      },
+      {
+        "source": 3,
+        "target": 7,
+        "type": "connection"
+      },
+      {
+        "source": 3,
+        "target": 8,
+        "type": "connection"
+      },
+      {
+        "source": 3,
+        "target": 9,
+        "type": "connection"
+      },
+      {
+        "source": 3,
+        "target": 47,
+        "type": "connection"
+      },
+      {
+        "source": 3,
+        "target": 48,
+        "type": "connection"
+      },
+      {
+        "source": 3,
+        "target": 50,
+        "type": "connection"
+      },
+      {
+        "source": 4,
+        "target": 5,
+        "type": "connection"
+      },
+      {
+        "source": 4,
+        "target": 7,
+        "type": "connection"
+      },
+      {
+        "source": 4,
+        "target": 8,
+        "type": "connection"
+      },
+      {
+        "source": 4,
+        "target": 9,
+        "type": "connection"
+      },
+      {
+        "source": 4,
+        "target": 50,
+        "type": "connection"
+      },
+      {
+        "source": 4,
+        "target": 53,
+        "type": "connection"
+      },
+      {
+        "source": 4,
+        "target": 56,
+        "type": "connection"
+      },
+      {
+        "source": 5,
+        "target": 12,
+        "type": "connection"
+      },
+      {
+        "source": 5,
+        "target": 15,
+        "type": "connection"
+      },
+      {
+        "source": 5,
+        "target": 16,
+        "type": "connection"
+      },
+      {
+        "source": 5,
+        "target": 24,
+        "type": "connection"
+      },
+      {
+        "source": 5,
+        "target": 47,
+        "type": "connection"
+      },
+      {
+        "source": 7,
+        "target": 8,
+        "type": "connection"
+      },
+      {
+        "source": 7,
+        "target": 9,
+        "type": "connection"
+      },
+      {
+        "source": 7,
+        "target": 12,
+        "type": "connection"
+      },
+      {
+        "source": 7,
+        "target": 13,
+        "type": "connection"
+      },
+      {
+        "source": 7,
+        "target": 21,
+        "type": "connection"
+      },
+      {
+        "source": 7,
+        "target": 29,
+        "type": "connection"
+      },
+      {
+        "source": 7,
+        "target": 47,
+        "type": "connection"
+      },
+      {
+        "source": 7,
+        "target": 48,
+        "type": "connection"
+      },
+      {
+        "source": 8,
+        "target": 9,
+        "type": "connection"
+      },
+      {
+        "source": 8,
+        "target": 12,
+        "type": "connection"
+      },
+      {
+        "source": 8,
+        "target": 13,
+        "type": "connection"
+      },
+      {
+        "source": 8,
+        "target": 21,
+        "type": "connection"
+      },
+      {
+        "source": 8,
+        "target": 29,
+        "type": "connection"
+      },
+      {
+        "source": 8,
+        "target": 38,
+        "type": "connection"
+      },
+      {
+        "source": 8,
+        "target": 40,
+        "type": "connection"
+      },
+      {
+        "source": 9,
+        "target": 24,
+        "type": "connection"
+      },
+      {
+        "source": 9,
+        "target": 25,
+        "type": "connection"
+      },
+      {
+        "source": 9,
+        "target": 48,
+        "type": "connection"
+      },
+      {
+        "source": 9,
+        "target": 50,
+        "type": "connection"
+      },
+      {
+        "source": 9,
+        "target": 56,
+        "type": "connection"
+      },
+      {
+        "source": 12,
+        "target": 13,
+        "type": "connection"
+      },
+      {
+        "source": 12,
+        "target": 15,
+        "type": "connection"
+      },
+      {
+        "source": 12,
+        "target": 16,
+        "type": "connection"
+      },
+      {
+        "source": 12,
+        "target": 17,
+        "type": "connection"
+      },
+      {
+        "source": 12,
+        "target": 19,
+        "type": "connection"
+      },
+      {
+        "source": 12,
+        "target": 20,
+        "type": "connection"
+      },
+      {
+        "source": 12,
+        "target": 32,
+        "type": "connection"
+      },
+      {
+        "source": 12,
+        "target": 47,
+        "type": "connection"
+      },
+      {
+        "source": 13,
+        "target": 15,
+        "type": "connection"
+      },
+      {
+        "source": 13,
+        "target": 16,
+        "type": "connection"
+      },
+      {
+        "source": 13,
+        "target": 17,
+        "type": "connection"
+      },
+      {
+        "source": 13,
+        "target": 28,
+        "type": "connection"
+      },
+      {
+        "source": 13,
+        "target": 29,
+        "type": "connection"
+      },
+      {
+        "source": 13,
+        "target": 37,
+        "type": "connection"
+      },
+      {
+        "source": 15,
+        "target": 16,
+        "type": "connection"
+      },
+      {
+        "source": 15,
+        "target": 17,
+        "type": "connection"
+      },
+      {
+        "source": 15,
+        "target": 24,
+        "type": "connection"
+      },
+      {
+        "source": 15,
+        "target": 25,
+        "type": "connection"
+      },
+      {
+        "source": 15,
+        "target": 38,
+        "type": "connection"
+      },
+      {
+        "source": 15,
+        "target": 44,
+        "type": "connection"
+      },
+      {
+        "source": 16,
+        "target": 17,
+        "type": "connection"
+      },
+      {
+        "source": 16,
+        "target": 34,
+        "type": "connection"
+      },
+      {
+        "source": 16,
+        "target": 38,
+        "type": "connection"
+      },
+      {
+        "source": 16,
+        "target": 40,
+        "type": "connection"
+      },
+      {
+        "source": 16,
+        "target": 44,
+        "type": "connection"
+      },
+      {
+        "source": 17,
+        "target": 34,
+        "type": "connection"
+      },
+      {
+        "source": 17,
+        "target": 40,
+        "type": "connection"
+      },
+      {
+        "source": 17,
+        "target": 44,
+        "type": "connection"
+      },
+      {
+        "source": 19,
+        "target": 20,
+        "type": "connection"
+      },
+      {
+        "source": 19,
+        "target": 21,
+        "type": "connection"
+      },
+      {
+        "source": 19,
+        "target": 48,
+        "type": "connection"
+      },
+      {
+        "source": 19,
+        "target": 54,
+        "type": "connection"
+      },
+      {
+        "source": 20,
+        "target": 21,
+        "type": "connection"
+      },
+      {
+        "source": 21,
+        "target": 29,
+        "type": "connection"
+      },
+      {
+        "source": 21,
+        "target": 30,
+        "type": "connection"
+      },
+      {
+        "source": 21,
+        "target": 38,
+        "type": "connection"
+      },
+      {
+        "source": 24,
+        "target": 25,
+        "type": "connection"
+      },
+      {
+        "source": 24,
+        "target": 26,
+        "type": "connection"
+      },
+      {
+        "source": 24,
+        "target": 28,
+        "type": "connection"
+      },
+      {
+        "source": 24,
+        "target": 38,
+        "type": "connection"
+      },
+      {
+        "source": 24,
+        "target": 48,
+        "type": "connection"
+      },
+      {
+        "source": 24,
+        "target": 50,
+        "type": "connection"
+      },
+      {
+        "source": 24,
+        "target": 56,
+        "type": "connection"
+      },
+      {
+        "source": 25,
+        "target": 28,
+        "type": "connection"
+      },
+      {
+        "source": 25,
+        "target": 38,
+        "type": "connection"
+      },
+      {
+        "source": 25,
+        "target": 26,
+        "type": "connection"
+      },
+      {
+        "source": 26,
+        "target": 57,
+        "type": "connection"
+      },
+      {
+        "source": 28,
+        "target": 29,
+        "type": "connection"
+      },
+      {
+        "source": 28,
+        "target": 32,
+        "type": "connection"
+      },
+      {
+        "source": 28,
+        "target": 38,
+        "type": "connection"
+      },
+      {
+        "source": 29,
+        "target": 30,
+        "type": "connection"
+      },
+      {
+        "source": 30,
+        "target": 28,
+        "type": "connection"
+      },
+      {
+        "source": 32,
+        "target": 33,
+        "type": "connection"
+      },
+      {
+        "source": 32,
+        "target": 34,
+        "type": "connection"
+      },
+      {
+        "source": 33,
+        "target": 34,
+        "type": "connection"
+      },
+      {
+        "source": 34,
+        "target": 48,
+        "type": "connection"
+      },
+      {
+        "source": 37,
+        "target": 38,
+        "type": "connection"
+      },
+      {
+        "source": 37,
+        "target": 12,
+        "type": "connection"
+      },
+      {
+        "source": 38,
+        "target": 40,
+        "type": "connection"
+      },
+      {
+        "source": 38,
+        "target": 44,
+        "type": "connection"
+      },
+      {
+        "source": 40,
+        "target": 41,
+        "type": "connection"
+      },
+      {
+        "source": 40,
+        "target": 34,
+        "type": "connection"
+      },
+      {
+        "source": 41,
+        "target": 38,
+        "type": "connection"
+      },
+      {
+        "source": 43,
+        "target": 44,
+        "type": "connection"
+      },
+      {
+        "source": 43,
+        "target": 37,
+        "type": "connection"
+      },
+      {
+        "source": 43,
+        "target": 38,
+        "type": "connection"
+      },
+      {
+        "source": 44,
+        "target": 34,
+        "type": "connection"
+      },
+      {
+        "source": 47,
+        "target": 48,
+        "type": "connection"
+      },
+      {
+        "source": 47,
+        "target": 8,
+        "type": "connection"
+      },
+      {
+        "source": 48,
+        "target": 49,
+        "type": "connection"
+      },
+      {
+        "source": 48,
+        "target": 50,
+        "type": "connection"
+      },
+      {
+        "source": 48,
+        "target": 57,
+        "type": "connection"
+      },
+      {
+        "source": 48,
+        "target": 8,
+        "type": "connection"
+      },
+      {
+        "source": 50,
+        "target": 49,
+        "type": "connection"
+      },
+      {
+        "source": 50,
+        "target": 51,
+        "type": "connection"
+      },
+      {
+        "source": 50,
+        "target": 56,
+        "type": "connection"
+      },
+      {
+        "source": 51,
+        "target": 12,
+        "type": "connection"
+      },
+      {
+        "source": 51,
+        "target": 7,
+        "type": "connection"
+      },
+      {
+        "source": 51,
+        "target": 8,
+        "type": "connection"
+      },
+      {
+        "source": 51,
+        "target": 9,
+        "type": "connection"
+      },
+      {
+        "source": 51,
+        "target": 24,
+        "type": "connection"
+      },
+      {
+        "source": 53,
+        "target": 54,
+        "type": "connection"
+      },
+      {
+        "source": 53,
+        "target": 52,
+        "type": "connection"
+      },
+      {
+        "source": 53,
+        "target": 56,
+        "type": "connection"
+      },
+      {
+        "source": 53,
+        "target": 43,
+        "type": "connection"
+      },
+      {
+        "source": 53,
+        "target": 44,
+        "type": "connection"
+      },
+      {
+        "source": 54,
+        "target": 52,
+        "type": "connection"
+      },
+      {
+        "source": 54,
+        "target": 58,
+        "type": "connection"
+      },
+      {
+        "source": 54,
+        "target": 42,
+        "type": "connection"
+      },
+      {
+        "source": 54,
+        "target": 34,
+        "type": "connection"
+      },
+      {
+        "source": 56,
+        "target": 55,
+        "type": "connection"
+      },
+      {
+        "source": 56,
+        "target": 57,
+        "type": "connection"
+      },
+      {
+        "source": 56,
+        "target": 58,
+        "type": "connection"
+      },
+      {
+        "source": 57,
+        "target": 55,
+        "type": "connection"
+      },
+      {
+        "source": 57,
+        "target": 58,
+        "type": "connection"
+      },
+      {
+        "source": 57,
+        "target": 24,
+        "type": "connection"
+      },
+      {
+        "source": 57,
+        "target": 9,
+        "type": "connection"
+      },
+      {
+        "source": 57,
+        "target": 8,
+        "type": "connection"
+      },
+      {
+        "source": 58,
+        "target": 55,
+        "type": "connection"
+      },
+      {
+        "source": 58,
+        "target": 51,
+        "type": "connection"
+      }
+    ]
+  }
+}
