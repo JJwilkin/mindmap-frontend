@@ -620,11 +620,8 @@ const ZoomableCanvas = () => {
       }
     }
     
-    // Calculate zoom level - reduced multiplier for less aggressive zooming
-    const targetSize = 6;
-    const baseScale = targetSize / dot.size;
-    // Use a smaller multiplier and cap the maximum zoom (60% less zoom)
-    const newScale = Math.min(1.0, baseScale * 0.5); // Much less aggressive zoom
+    // Keep zoom at default scale (1.0) or slightly zoomed in
+    const newScale = 1.1; // Slight zoom in from default
 
     const newOffset = {
       x: window.innerWidth / 2 - dot.x,
