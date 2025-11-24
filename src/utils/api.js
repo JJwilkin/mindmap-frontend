@@ -1,9 +1,16 @@
 /**
  * Get the base API URL from environment variables
  * In production (Vercel), set VITE_API_URL in the Vercel dashboard
- * For local development, set it in .env file or leave empty to use proxy
+ * For local development, set VITE_DEV_MODE=true in .env to use localhost:3000
+ * Or set VITE_API_URL in .env file, or leave empty to use proxy
  */
 export function getApiUrl() {
+  // Check for dev mode first
+  if (import.meta.env.VITE_DEV_MODE === 'true') {
+    return 'http://localhost:3000';
+  }
+  
+  // Otherwise use VITE_API_URL if set
   return import.meta.env.VITE_API_URL || '';
 }
 

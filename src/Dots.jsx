@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import emailjs from '@emailjs/browser';
 import { getApiEndpoint } from './utils/api.js';
 
@@ -34,6 +36,7 @@ const ZoomableCanvas = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [activeModalTab, setActiveModalTab] = useState('overview'); // 'overview', 'chat', 'quiz'
+  const [isChatLoading, setIsChatLoading] = useState(false);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
   const [showVideoSelector, setShowVideoSelector] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState({});
@@ -43,6 +46,13 @@ const ZoomableCanvas = () => {
   const [hoveredLine, setHoveredLine] = useState(null);
   const [zoomMousePosition, setZoomMousePosition] = useState(null);
   const [zoomTimeout, setZoomTimeout] = useState(null);
+  
+  // Chat width state with persistence
+  const [chatWidth, setChatWidth] = useState(() => {
+    const saved = localStorage.getItem('chatWidth');
+    return saved ? parseInt(saved, 10) : 450;
+  });
+  const [isResizingChat, setIsResizingChat] = useState(false);
 
   // Function to load local JSON data
   const loadLocalData = async () => {
@@ -125,6 +135,44 @@ const ZoomableCanvas = () => {
       }
     };
   }, [zoomTimeout]);
+
+  // Handle chat resizing
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizingChat) return;
+      
+      // Calculate new width based on mouse position (right aligned, so width is window.innerWidth - mouseX)
+      const newWidth = window.innerWidth - e.clientX;
+      
+      // Set limits (min 300px, max 800px or 80% of screen)
+      const maxWidth = Math.min(800, window.innerWidth * 0.8);
+      const constrainedWidth = Math.max(300, Math.min(maxWidth, newWidth));
+      
+      setChatWidth(constrainedWidth);
+    };
+
+    const handleMouseUp = () => {
+      if (isResizingChat) {
+        setIsResizingChat(false);
+        localStorage.setItem('chatWidth', chatWidth);
+      }
+    };
+
+    if (isResizingChat) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      // Add a class to body to force cursor style everywhere while dragging
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none'; // Prevent text selection
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizingChat, chatWidth]);
 
   // Fetch subjects from API or use local data
   useEffect(() => {
@@ -1004,9 +1052,67 @@ const ZoomableCanvas = () => {
     return suggestions.slice(0, 2);
   };
 
-  const handleSendMessage = (e) => {
+  const sendChatMessage = async (question, currentMessages) => {
+    if (!selectedDot) return;
+
+    setIsChatLoading(true);
+    
+    try {
+      // Prepare conversation history from the messages passed in
+      // Exclude the last message (which is the current question we're about to send)
+      const conversationHistory = currentMessages.slice(0, -1).map(msg => ({
+        sender: msg.sender,
+        text: msg.text
+      }));
+
+      const response = await fetch(getApiEndpoint('/api/chat'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          topic: selectedDot.text,
+          question: question,
+          conversationHistory: conversationHistory
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from chat API');
+      }
+
+      const data = await response.json();
+      const followUpSuggestions = (data.followUpSuggestions && data.followUpSuggestions.length > 0) 
+        ? data.followUpSuggestions 
+        : generateFollowUpSuggestions(question);
+      
+      const aiResponse = {
+        id: Date.now() + 1,
+        text: data.response || 'Sorry, I could not generate a response.',
+        sender: 'ai',
+        timestamp: new Date().toISOString(),
+        followUpSuggestions: followUpSuggestions
+      };
+      
+      setChatMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      console.error('Error sending chat message:', error);
+      const errorResponse = {
+        id: Date.now() + 1,
+        text: 'Sorry, there was an error getting a response. Please try again.',
+        sender: 'ai',
+        timestamp: new Date().toISOString(),
+        followUpSuggestions: []
+      };
+      setChatMessages(prev => [...prev, errorResponse]);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!chatInput.trim()) return;
+    if (!chatInput.trim() || isChatLoading) return;
 
     const userMessage = chatInput.trim();
     const newMessage = {
@@ -1016,24 +1122,16 @@ const ZoomableCanvas = () => {
       timestamp: new Date().toISOString()
     };
 
-    setChatMessages([...chatMessages, newMessage]);
+    const updatedMessages = [...chatMessages, newMessage];
+    setChatMessages(updatedMessages);
     setChatInput('');
 
-    // Simulate AI response (in real app, this would call an API)
-    setTimeout(() => {
-      const followUpSuggestions = generateFollowUpSuggestions(userMessage);
-      const aiResponse = {
-        id: Date.now() + 1,
-        text: `This is a placeholder response about "${selectedDot?.text}". In a production app, this would connect to an AI service to provide intelligent answers about the topic.`,
-        sender: 'ai',
-        timestamp: new Date().toISOString(),
-        followUpSuggestions: followUpSuggestions
-      };
-      setChatMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+    await sendChatMessage(userMessage, updatedMessages);
   };
 
-  const handleQuestionClick = (question) => {
+  const handleQuestionClick = async (question) => {
+    if (isChatLoading) return;
+    
     setChatInput(question);
     // Auto-send the question
     const newMessage = {
@@ -1043,24 +1141,16 @@ const ZoomableCanvas = () => {
       timestamp: new Date().toISOString()
     };
 
-    setChatMessages([...chatMessages, newMessage]);
+    const updatedMessages = [...chatMessages, newMessage];
+    setChatMessages(updatedMessages);
     setChatInput('');
 
-    // Simulate AI response
-    setTimeout(() => {
-      const followUpSuggestions = generateFollowUpSuggestions(question);
-      const aiResponse = {
-        id: Date.now() + 1,
-        text: `This is a placeholder response about "${selectedDot?.text}". In a production app, this would connect to an AI service to provide intelligent answers about the topic.`,
-        sender: 'ai',
-        timestamp: new Date().toISOString(),
-        followUpSuggestions: followUpSuggestions
-      };
-      setChatMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+    await sendChatMessage(question, updatedMessages);
   };
 
-  const handleAddQuestionToChat = (questionText) => {
+  const handleAddQuestionToChat = async (questionText) => {
+    if (isChatLoading) return;
+    
     // Switch to chat tab
     setActiveModalTab('chat');
     
@@ -1072,21 +1162,11 @@ const ZoomableCanvas = () => {
       timestamp: new Date().toISOString()
     };
 
-    setChatMessages([...chatMessages, newMessage]);
+    const updatedMessages = [...chatMessages, newMessage];
+    setChatMessages(updatedMessages);
     setChatInput('');
 
-    // Simulate AI response
-    setTimeout(() => {
-      const followUpSuggestions = generateFollowUpSuggestions(questionText);
-      const aiResponse = {
-        id: Date.now() + 1,
-        text: `This is a placeholder response about "${selectedDot?.text}". In a production app, this would connect to an AI service to provide intelligent answers about the topic.`,
-        sender: 'ai',
-        timestamp: new Date().toISOString(),
-        followUpSuggestions: followUpSuggestions
-      };
-      setChatMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+    await sendChatMessage(questionText, updatedMessages);
   };
 
   // Generate follow-up questions based on the selected topic
@@ -1241,36 +1321,49 @@ const ZoomableCanvas = () => {
   return (
     <div className="fixed inset-0 overflow-hidden bg-gray-900">
       {/* Add Search Bar */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-64">
-        <input
-          type="search"
-          placeholder="Learn about anything..."
-          value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
-          className="w-full px-4 py-2 bg-white rounded-lg shadow-lg text-black"
-        />
-        
-        {/* Search Results Dropdown */}
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4">
+        {/* Search Results Dropdown - moved above input */}
         {showSearchResults && searchResults.length > 0 && (
-          <div className="absolute w-full mt-2 bg-white rounded-lg shadow-lg max-h-96 overflow-y-auto">
-            {searchResults.map(dot => (
-              <div
-                key={dot.id}
-                className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
-                onClick={() => {
-                  handleDotClick(dot);
-                  setShowSearchResults(false);
-                  setSearchQuery('');
-                }}
-              >
-                <div className="font-medium text-black">{dot.text}</div>
-                {dot.details && (
-                  <div className="text-sm text-gray-600 truncate">{dot.details}</div>
-                )}
-              </div>
-            ))}
+          <div className="absolute w-full left-0 px-4 mb-4 bottom-full">
+            <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto">
+              {searchResults.map(dot => (
+                <div
+                  key={dot.id}
+                  className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+                  onClick={() => {
+                    handleDotClick(dot);
+                    setShowSearchResults(false);
+                    setSearchQuery('');
+                  }}
+                >
+                  <div className="font-medium text-gray-900 text-lg">{dot.text}</div>
+                  {dot.details && (
+                    <div className="text-sm text-gray-500 truncate mt-1">{dot.details}</div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
+
+        <div className="relative group">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-40 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+          <div className="relative rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 backdrop-blur-xl overflow-hidden">
+            <div 
+              className="absolute inset-0 opacity-[0.07]"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+              }}
+            ></div>
+            <input
+              type="search"
+              placeholder="Learn about anything..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="relative w-full px-8 py-5 bg-gradient-to-r from-blue-50/90 via-purple-50/90 to-pink-50/90 hover:from-blue-50 hover:via-purple-50 hover:to-pink-50 transition-colors bg-opacity-80 backdrop-blur-md border border-white/20 text-gray-900 placeholder-gray-500 text-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 rounded-2xl"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Modal */}
@@ -1556,8 +1649,8 @@ const ZoomableCanvas = () => {
             </div>
           )}
           
-          {/* High-level view title */}
-          {!selectedSubject && highLevelDots.length > 1 && (
+          {/* High-level view title - REMOVED as it overlaps with search bar */}
+          {/* {!selectedSubject && highLevelDots.length > 1 && (
             <div
               className="absolute text-white font-bold pointer-events-none"
               style={{
@@ -1573,7 +1666,7 @@ const ZoomableCanvas = () => {
             >
               Select a Subject
             </div>
-          )}
+          )} */}
 
           {/* Connection Lines */}
           <svg 
@@ -1927,13 +2020,25 @@ const ZoomableCanvas = () => {
                     <h3 className="text-xl font-semibold mb-4 text-white">Video Tutorial</h3>
                     <div className="aspect-video bg-black flex items-center justify-center overflow-hidden rounded-lg border border-[rgba(255,255,255,0.12)] mb-4">
                       {(() => {
-                        const availableVideos = selectedDot.videoUrls || (selectedDot.videoUrl ? [selectedDot.videoUrl] : []);
+                        const availableVideos = selectedDot.videos || selectedDot.videoUrls || (selectedDot.videoUrl ? [selectedDot.videoUrl] : []);
                         const currentVideo = availableVideos[selectedVideoIndex];
                         
-                        return currentVideo ? (
+                        // Convert YouTube watch URLs to embed URLs
+                        const getEmbedUrl = (url) => {
+                          if (!url) return null;
+                          const videoIdMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+                          if (videoIdMatch) {
+                            return `https://www.youtube.com/embed/${videoIdMatch[1]}`;
+                          }
+                          return url; // Return as-is if already in embed format or not YouTube
+                        };
+                        
+                        const embedUrl = getEmbedUrl(currentVideo);
+                        
+                        return embedUrl ? (
                           <iframe
                             className="w-full h-full"
-                            src={currentVideo}
+                            src={embedUrl}
                             title={`${selectedDot.text} Tutorial ${selectedVideoIndex + 1}`}
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
@@ -1952,7 +2057,7 @@ const ZoomableCanvas = () => {
                     
                     {/* Video Selector */}
                     {(() => {
-                      const availableVideos = selectedDot.videoUrls || (selectedDot.videoUrl ? [selectedDot.videoUrl] : []);
+                      const availableVideos = selectedDot.videos || selectedDot.videoUrls || (selectedDot.videoUrl ? [selectedDot.videoUrl] : []);
                       if (availableVideos.length <= 1) return null;
                       
                       return (
@@ -1980,20 +2085,23 @@ const ZoomableCanvas = () => {
                                   }}
                                   className={`w-full text-left p-3 rounded-lg transition-all border ${
                                     selectedVideoIndex === index
-                                      ? 'border-[rgba(100,149,237,0.5)] bg-[rgba(100,149,237,0.15)]'
-                                      : 'border-[rgba(255,255,255,0.12)] hover:border-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.03)]'
+                                      ? 'border-[#6495ed]'
+                                      : 'border-transparent hover:border-[rgba(255,255,255,0.2)]'
                                   }`}
+                                  style={{
+                                    background: 'transparent'
+                                  }}
                                 >
                                   <div className="flex items-center gap-3">
                                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-semibold ${
                                       selectedVideoIndex === index
-                                        ? 'bg-[#6495ed] text-white'
-                                        : 'bg-[rgba(255,255,255,0.1)] text-gray-300'
+                                        ? 'bg-transparent border border-[#6495ed] text-[#6495ed]'
+                                        : 'bg-transparent border border-[rgba(255,255,255,0.2)] text-gray-400'
                                     }`}>
                                       {index + 1}
                                     </div>
                                     <span className={`text-sm ${
-                                      selectedVideoIndex === index ? 'text-white font-medium' : 'text-gray-300'
+                                      selectedVideoIndex === index ? 'text-white font-medium' : 'text-gray-400'
                                     }`}>
                                       Video Tutorial {index + 1}
                                     </span>
@@ -2025,9 +2133,11 @@ const ZoomableCanvas = () => {
                     background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
                   }}>
                     <h3 className="text-xl font-semibold mb-4 text-white">Detailed Explanation</h3>
-                    <p className="text-gray-200 leading-relaxed text-base whitespace-pre-wrap">
-                      {selectedDot.fullContent || selectedDot.details}
-                    </p>
+                    <div className="text-gray-200 leading-relaxed text-base markdown-content">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {selectedDot.fullContent || selectedDot.details}
+                      </ReactMarkdown>
+                    </div>
                   </div>
 
                   {/* Implementations */}
@@ -2362,11 +2472,23 @@ const ZoomableCanvas = () => {
 
       {/* Separate Chat Modal */}
       {showFullContent && selectedDot && (
-        <div className="fixed inset-y-0 right-0 z-50 p-4" style={{
-          paddingRight: '1rem',
-          paddingLeft: '1rem'
+        <div className="fixed inset-y-0 right-0 z-50 flex items-center" style={{
+          paddingRight: '1rem'
         }}>
-          <div className="w-[450px] flex flex-col overflow-hidden ml-auto" style={{
+          {/* Resize Handle */}
+          <div 
+            className="w-6 h-full cursor-col-resize flex items-center justify-center hover:bg-white/5 transition-colors -mr-3 z-10 select-none"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setIsResizingChat(true);
+            }}
+            title="Drag to resize"
+          >
+            <div className="w-1 h-16 bg-gray-500/30 rounded-full" />
+          </div>
+
+          <div className="flex flex-col overflow-hidden ml-auto" style={{
+            width: `${chatWidth}px`,
             height: 'calc(100vh - 2rem)',
             background: '#1a1d29',
             borderRadius: '12px',
@@ -2402,11 +2524,15 @@ const ZoomableCanvas = () => {
                     <p className="text-xs text-gray-300">Click a question to get started</p>
                   </div>
                   <div className="space-y-3 flex-1">
-                    {getFollowUpQuestions().map((question, index) => (
+                    {(selectedDot.questions && selectedDot.questions.length > 0 
+                      ? selectedDot.questions 
+                      : getFollowUpQuestions()
+                    ).map((question, index) => (
                       <button
                         key={index}
                         onClick={() => handleQuestionClick(question)}
-                        className="w-full text-left p-3 rounded-lg border border-[rgba(255,255,255,0.18)] transition-all text-sm text-gray-200 hover:border-[rgba(255,255,255,0.25)] hover:text-white"
+                        disabled={isChatLoading}
+                        className="w-full text-left p-3 rounded-lg border border-[rgba(255,255,255,0.18)] transition-all text-sm text-gray-200 hover:border-[rgba(255,255,255,0.25)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{
                           background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)'
                         }}
@@ -2438,7 +2564,9 @@ const ZoomableCanvas = () => {
                             background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 100%)'
                           }}
                         >
-                          <p className="text-sm leading-relaxed">{message.text}</p>
+                          <div className="text-sm leading-relaxed markdown-content">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.text}</ReactMarkdown>
+                          </div>
                         </div>
                       </div>
                       {/* Show follow-up suggestions below AI messages */}
@@ -2462,6 +2590,26 @@ const ZoomableCanvas = () => {
                       )}
                     </div>
                   ))}
+                  {/* Loading indicator */}
+                  {isChatLoading && (
+                    <div className="flex justify-start">
+                      <div
+                        className="max-w-[85%] px-4 py-3 rounded-lg border text-gray-200 border-[rgba(255,255,255,0.12)]"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 100%)'
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1">
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                          </div>
+                          <span className="text-sm text-gray-400">Thinking...</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -2475,10 +2623,11 @@ const ZoomableCanvas = () => {
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     placeholder="Ask a question..."
-                    className="w-full px-4 pr-12 py-3 rounded-lg border border-[rgba(255,255,255,0.12)] focus:outline-none focus:border-[rgba(255,255,255,0.2)] text-white text-sm placeholder-gray-300"
+                    className="w-full px-4 pr-12 py-3 rounded-lg border border-[rgba(255,255,255,0.12)] focus:outline-none focus:border-[rgba(255,255,255,0.2)] text-white text-sm placeholder-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
                       background: 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%)'
                     }}
+                    disabled={isChatLoading}
                   />
                   <button
                     type="submit"
@@ -2486,7 +2635,7 @@ const ZoomableCanvas = () => {
                     style={{
                       background: 'linear-gradient(135deg, rgba(100,149,237,0.2) 0%, rgba(100,149,237,0.1) 100%)'
                     }}
-                    disabled={!chatInput.trim()}
+                    disabled={!chatInput.trim() || isChatLoading}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
