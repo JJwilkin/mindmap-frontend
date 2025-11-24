@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import emailjs from '@emailjs/browser';
@@ -31,6 +31,9 @@ const ZoomableCanvas = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [pendingDotSelection, setPendingDotSelection] = useState(null); // For cross-subject navigation
+  const pendingDotProcessed = useRef(false); // Track if we've already processed the pending dot
   const [showFeedback, setShowFeedback] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [chatMessages, setChatMessages] = useState([]);
@@ -1003,22 +1006,176 @@ const ZoomableCanvas = () => {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [activePath, selectedDot, pathPosition, pathDots, allPaths, dots, handleDotClick, showFullContent, lines, selectedSubject, showExitSubjectPrompt, highLevelDots]);
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    if (!query.trim()) {
+  // Debounce search to avoid excessive API calls
+  useEffect(() => {
+    if (!searchQuery.trim()) {
       setSearchResults([]);
       setShowSearchResults(false);
+      setIsSearching(false);
       return;
     }
 
-    // Search in current visible dots (either high-level or selected subject)
-    const results = dots.filter(dot => 
-      dot.text.toLowerCase().includes(query.toLowerCase()) ||
-      dot.details?.toLowerCase().includes(query.toLowerCase())
-    );
-    setSearchResults(results);
-    setShowSearchResults(true);
-  };
+    setIsSearching(true);
+    const debounceTimer = setTimeout(async () => {
+      console.log('🔍 Searching for:', searchQuery);
+      try {
+        // Perform both MongoDB text search and semantic search in parallel
+        const [mongoResults, semanticResults] = await Promise.allSettled([
+          // MongoDB text search - fast, exact matches
+          fetch(getApiEndpoint('/api/topics'))
+            .then(res => res.ok ? res.json() : [])
+            .then(allTopics => {
+              const queryLower = searchQuery.toLowerCase();
+              return allTopics
+                .filter(topic => 
+                  topic.title?.toLowerCase().includes(queryLower) ||
+                  topic.details?.toLowerCase().includes(queryLower) ||
+                  topic.fullContent?.toLowerCase().includes(queryLower)
+                )
+                .slice(0, 15) // Top 15 text matches
+                .map(topic => ({
+                  ...topic,
+                  displayText: topic.title,
+                  displaySubject: topic.subject,
+                  displaySubjectSlug: topic.subjectSlug,
+                  matchType: 'text'
+                }));
+            }),
+          
+          // Semantic search - intelligent, related topics
+          fetch(getApiEndpoint('/api/search/semantic'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: searchQuery, limit: 10 })
+          })
+            .then(res => res.ok ? res.json() : [])
+            .then(results => {
+              if (!Array.isArray(results)) return [];
+              return results.map(result => ({
+                id: result.id,
+                dotId: result.id?.split('-dot-')[1],
+                title: result.metadata?.topic || result.metadata?.concept || '',
+                displayText: result.metadata?.topic || result.metadata?.concept || '',
+                displaySubject: result.metadata?.subject || '',
+                displaySubjectSlug: result.metadata?.subjectSlug || '',
+                details: result.text || '',
+                matchType: 'semantic',
+                score: result.score || 0
+              }));
+            })
+        ]);
+
+        // Combine results from both searches
+        let combinedResults = [];
+        
+        // Add MongoDB results
+        if (mongoResults.status === 'fulfilled' && Array.isArray(mongoResults.value)) {
+          console.log('📄 MongoDB results:', mongoResults.value.length);
+          combinedResults.push(...mongoResults.value);
+        } else if (mongoResults.status === 'rejected') {
+          console.warn('⚠️ MongoDB search failed:', mongoResults.reason);
+        }
+        
+        // Add semantic results (avoiding duplicates)
+        if (semanticResults.status === 'fulfilled' && Array.isArray(semanticResults.value)) {
+          console.log('🤖 Semantic results:', semanticResults.value.length);
+          const existingIds = new Set(combinedResults.map(r => r.id));
+          const uniqueSemanticResults = semanticResults.value.filter(r => !existingIds.has(r.id));
+          combinedResults.push(...uniqueSemanticResults);
+        } else if (semanticResults.status === 'rejected') {
+          console.warn('⚠️ Semantic search failed:', semanticResults.reason);
+        }
+        
+        // If both failed or returned no results, fallback to local search
+        if (combinedResults.length === 0) {
+          console.warn('⚠️ Both API searches failed or returned no results, falling back to local search');
+          const localResults = dots.filter(dot => 
+            dot.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            dot.details?.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+          console.log('💻 Local search results:', localResults.length);
+          combinedResults = localResults.map(dot => ({
+            ...dot,
+            displayText: dot.text,
+            displaySubject: selectedSubject?.name || 'Current View',
+            displaySubjectSlug: selectedSubject?.slug,
+            matchType: 'local'
+          }));
+        }
+        
+        // Sort: text matches first, then semantic by score
+        combinedResults.sort((a, b) => {
+          if (a.matchType === 'text' && b.matchType !== 'text') return -1;
+          if (a.matchType !== 'text' && b.matchType === 'text') return 1;
+          if (a.matchType === 'semantic' && b.matchType === 'semantic') {
+            return (b.score || 0) - (a.score || 0);
+          }
+          return 0;
+        });
+        
+        const finalResults = combinedResults.slice(0, 20); // Limit to top 20 total
+        console.log('✅ Total results:', finalResults.length);
+        setSearchResults(finalResults);
+        setShowSearchResults(true);
+      } catch (error) {
+        console.error('Search error:', error);
+        
+        // Final fallback to local search
+        const results = dots.filter(dot => 
+          dot.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          dot.details?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setSearchResults(results.map(dot => ({
+          ...dot,
+          displayText: dot.text,
+          displaySubject: selectedSubject?.name || 'Current View',
+          displaySubjectSlug: selectedSubject?.slug,
+          matchType: 'local'
+        })));
+        setShowSearchResults(true);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300); // Wait 300ms after user stops typing
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery, dots, selectedSubject]);
+
+  // Handle pending dot selection after subject change (for cross-subject navigation)
+  useEffect(() => {
+    // Only process if we have a pending selection, dots are loaded, and we haven't already processed it
+    if (pendingDotSelection && dots.length > 0 && selectedSubject && !pendingDotProcessed.current) {
+      console.log('🎯 Looking for pending dot:', pendingDotSelection);
+      
+      // Mark as being processed to prevent infinite loops
+      pendingDotProcessed.current = true;
+      
+      // Try to find the dot by ID (convert to number if needed)
+      const dotId = typeof pendingDotSelection === 'string' ? parseInt(pendingDotSelection, 10) : pendingDotSelection;
+      const targetDot = dots.find(d => d.id === dotId || d.id === pendingDotSelection);
+      
+      if (targetDot) {
+        console.log('✅ Found dot:', targetDot.text);
+        // Clear pending selection and reset flag
+        setPendingDotSelection(null);
+        pendingDotProcessed.current = false;
+        
+        // Open the dot modal
+        setSelectedDot(targetDot);
+        setActiveModalTab('overview');
+      } else {
+        console.warn('⚠️ Dot not found:', pendingDotSelection);
+        // Clear and reset
+        setPendingDotSelection(null);
+        pendingDotProcessed.current = false;
+      }
+    }
+    
+    // Reset the flag when pendingDotSelection is cleared
+    if (!pendingDotSelection) {
+      pendingDotProcessed.current = false;
+    }
+  }, [pendingDotSelection, dots, selectedSubject]);
 
   // Generate contextual follow-up questions based on user's question
   const generateFollowUpSuggestions = (userQuestion) => {
@@ -1323,25 +1480,110 @@ const ZoomableCanvas = () => {
       {/* Add Search Bar */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4">
         {/* Search Results Dropdown - moved above input */}
-        {showSearchResults && searchResults.length > 0 && (
+        {showSearchResults && (
           <div className="absolute w-full left-0 px-4 mb-4 bottom-full">
             <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto">
-              {searchResults.map(dot => (
-                <div
-                  key={dot.id}
-                  className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
-                  onClick={() => {
-                    handleDotClick(dot);
-                    setShowSearchResults(false);
-                    setSearchQuery('');
-                  }}
-                >
-                  <div className="font-medium text-gray-900 text-lg">{dot.text}</div>
-                  {dot.details && (
-                    <div className="text-sm text-gray-500 truncate mt-1">{dot.details}</div>
+              {searchResults.length > 0 ? (
+                <>
+                  {/* Show section headers for combined results */}
+                  {searchResults.some(r => r.matchType === 'text') && searchResults.some(r => r.matchType === 'semantic') && (
+                    <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 sticky top-0">
+                      <p className="text-xs text-gray-600 font-medium">
+                        Showing exact matches and AI-suggested related topics
+                      </p>
+                    </div>
                   )}
+                  {searchResults.map((result, index) => {
+                    // Check if this is the first semantic result after text results
+                    const showDivider = index > 0 && 
+                      result.matchType === 'semantic' && 
+                      searchResults[index - 1].matchType === 'text';
+                    
+                    return (
+                      <div key={result.id}>
+                        {showDivider && (
+                          <div className="px-4 py-2 bg-purple-50 border-y border-purple-100">
+                            <p className="text-xs text-purple-700 font-medium flex items-center gap-1">
+                              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                              </svg>
+                              Related topics (AI-powered)
+                            </p>
+                          </div>
+                        )}
+                        <div
+                        className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                    onClick={() => {
+                      // Close search UI
+                      setShowSearchResults(false);
+                      setSearchQuery('');
+                      
+                      // If the topic is from a different subject, navigate to that subject first
+                      if (result.displaySubjectSlug && result.displaySubjectSlug !== selectedSubject?.slug) {
+                        const targetSubject = subjects.find(s => s.slug === result.displaySubjectSlug);
+                        
+                        if (targetSubject) {
+                          // First, find the high-level dot for this subject and click it to load the subject
+                          const highLevelDot = highLevelDots.find(d => d.subjectSlug === result.displaySubjectSlug);
+                          
+                          if (highLevelDot) {
+                            // Set pending dot selection BEFORE clicking the subject
+                            pendingDotProcessed.current = false; // Reset the flag
+                            setPendingDotSelection(result.dotId);
+                            // Click the high-level subject dot to load it
+                            handleDotClick(highLevelDot);
+                          }
+                        }
+                      } else {
+                        // Same subject, just find and open the dot
+                        const dotId = typeof result.dotId === 'string' ? parseInt(result.dotId, 10) : result.dotId;
+                        const targetDot = dots.find(d => d.id === dotId || d.id === result.dotId || d.id === result.id);
+                        
+                        if (targetDot) {
+                          setSelectedDot(targetDot);
+                          setActiveModalTab('overview');
+                        }
+                      }
+                    }}
+                  >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium text-gray-900 text-lg">{result.displayText || result.text || result.title}</div>
+                        {result.matchType === 'semantic' && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700" title="AI-powered semantic match">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                            </svg>
+                          </span>
+                        )}
+                      </div>
+                      {result.details && (
+                        <div className="text-sm text-gray-500 truncate mt-1">{result.details}</div>
+                      )}
+                    </div>
+                    {result.displaySubject && (
+                      <div className="flex-shrink-0">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                          {result.displaySubject}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
+              ) : (
+                <div className="p-6 text-center text-gray-500">
+                  <svg className="mx-auto h-12 w-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <p className="text-sm">No topics found matching "{searchQuery}"</p>
+                  <p className="text-xs mt-1">Try different keywords or check spelling</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
@@ -1355,13 +1597,23 @@ const ZoomableCanvas = () => {
                 backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
               }}
             ></div>
-            <input
-              type="search"
-              placeholder="Learn about anything..."
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="relative w-full px-8 py-5 bg-gradient-to-r from-blue-50/90 via-purple-50/90 to-pink-50/90 hover:from-blue-50 hover:via-purple-50 hover:to-pink-50 transition-colors bg-opacity-80 backdrop-blur-md border border-white/20 text-gray-900 placeholder-gray-500 text-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 rounded-2xl"
-            />
+            <div className="relative">
+              <input
+                type="search"
+                placeholder="Search across all topics..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="relative w-full px-8 py-5 pr-12 bg-gradient-to-r from-blue-50/90 via-purple-50/90 to-pink-50/90 hover:from-blue-50 hover:via-purple-50 hover:to-pink-50 transition-colors bg-opacity-80 backdrop-blur-md border border-white/20 text-gray-900 placeholder-gray-500 text-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 rounded-2xl"
+              />
+              {isSearching && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <svg className="animate-spin h-5 w-5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
