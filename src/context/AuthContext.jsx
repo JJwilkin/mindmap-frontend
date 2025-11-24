@@ -19,8 +19,20 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await fetch(getApiEndpoint('/api/auth/user'), {
         credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+        },
       });
+      
+      if (!response.ok) {
+        console.warn('Auth check failed:', response.status, response.statusText);
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      
       const data = await response.json();
+      console.log('Auth check result:', data.user ? 'Logged in' : 'Not logged in');
       setUser(data.user);
     } catch (error) {
       console.error('Error checking auth:', error);
@@ -31,7 +43,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    checkAuth();
+    // Check if we just returned from OAuth (auth=success in URL)
+    const urlParams = new URLSearchParams(window.location.search);
+    const authSuccess = urlParams.get('auth');
+    
+    if (authSuccess === 'success') {
+      // Remove the auth parameter from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Wait a moment for the cookie to be set, then check auth
+      setTimeout(() => {
+        checkAuth();
+      }, 100);
+    } else {
+      checkAuth();
+    }
     
     // Listen for storage events (when user logs in from another tab)
     const handleStorageChange = () => {
