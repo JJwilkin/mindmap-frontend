@@ -25,8 +25,11 @@ const Header = () => {
       left: 0,
       right: 0,
       height: '60px',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      background: 'rgba(15, 15, 20, 0.75)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+      boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
       zIndex: 1000,
       display: 'flex',
       alignItems: 'center',
@@ -39,14 +42,14 @@ const Header = () => {
         gap: '12px',
       }}>
         <div style={{
-          fontSize: '24px',
-          fontWeight: 'bold',
+          fontSize: '22px',
+          fontWeight: '100',
           color: 'white',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
+          letterSpacing: '4px',
+          fontFamily: '"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         }}>
-          <span style={{ fontSize: '28px' }}>🗺️</span>
           <span>ASTRL</span>
         </div>
       </div>
@@ -60,8 +63,8 @@ const Header = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                background: 'rgba(255,255,255,0.2)',
-                border: 'none',
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.15)',
                 borderRadius: '24px',
                 padding: '6px 12px 6px 6px',
                 cursor: 'pointer',
@@ -69,8 +72,14 @@ const Header = () => {
                 color: 'white',
                 fontWeight: '500',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+              }}
             >
               <img
                 src={user.profilePicture || 'https://via.placeholder.com/32'}
@@ -104,28 +113,31 @@ const Header = () => {
                 top: '100%',
                 right: 0,
                 marginTop: '8px',
-                background: 'white',
+                background: 'rgba(20, 20, 25, 0.95)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: '12px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
                 minWidth: '200px',
                 overflow: 'hidden',
                 animation: 'fadeIn 0.2s ease',
               }}>
                 <div style={{
                   padding: '12px 16px',
-                  borderBottom: '1px solid #eee',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
                 }}>
                   <div style={{
                     fontSize: '14px',
                     fontWeight: '600',
-                    color: '#333',
+                    color: '#ffffff',
                     marginBottom: '4px',
                   }}>
                     {user.displayName}
                   </div>
                   <div style={{
                     fontSize: '12px',
-                    color: '#666',
+                    color: '#999',
                   }}>
                     {user.email}
                   </div>
@@ -143,11 +155,11 @@ const Header = () => {
                     textAlign: 'left',
                     cursor: 'pointer',
                     fontSize: '14px',
-                    color: '#dc2626',
+                    color: '#ff6b6b',
                     fontWeight: '500',
                     transition: 'background 0.2s',
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#fef2f2'}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 107, 107, 0.1)'}
                   onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                 >
                   Sign Out
@@ -162,24 +174,26 @@ const Header = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              background: 'white',
-              border: 'none',
+              background: 'rgba(255, 255, 255, 0.95)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: '24px',
               padding: '10px 20px',
               cursor: 'pointer',
               fontWeight: '600',
               fontSize: '14px',
-              color: '#667eea',
+              color: '#1a1a1a',
               transition: 'all 0.2s',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.3)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)';
             }}
           >
             <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
