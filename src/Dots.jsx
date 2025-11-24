@@ -3,6 +3,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import emailjs from '@emailjs/browser';
 import { getApiEndpoint } from './utils/api.js';
+import { useAuth } from './context/AuthContext';
+import LoginModal from './components/LoginModal';
 
 // Local testing mode - set to true to bypass API and use local JSON files
 // You can also set VITE_USE_LOCAL_DATA=true in your .env file
@@ -56,6 +58,10 @@ const ZoomableCanvas = () => {
     return saved ? parseInt(saved, 10) : 450;
   });
   const [isResizingChat, setIsResizingChat] = useState(false);
+  
+  // Authentication
+  const { user } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Function to load local JSON data
   const loadLocalData = async () => {
@@ -546,8 +552,34 @@ const ZoomableCanvas = () => {
       return 1 - ((distance - fadeStartRadius) / (proximityRadius - fadeStartRadius));
     }
     
-    // If very close, full opacity
+    // Full opacity when close
     return 1;
+  };
+
+  // Proximity glow effect for dots - more performant than scaling
+  const getProximityGlow = (dotX, dotY) => {
+    // Convert dot position to screen coordinates
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    const screenX = (dotX + offset.x) * scale + centerX * (1 - scale);
+    const screenY = (dotY + offset.y) * scale + centerY * (1 - scale);
+    
+    // Calculate distance from mouse
+    const dx = screenX - mousePosition.x;
+    const dy = screenY - mousePosition.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Define glow radius (in screen pixels)
+    const maxGlowRadius = 150 * scale; // Maximum distance for glow effect
+    
+    // If too far, no glow
+    if (distance > maxGlowRadius) return 0;
+    
+    // Smooth interpolation for glow intensity (0 to 1)
+    const normalizedDistance = distance / maxGlowRadius;
+    const glowIntensity = 1 - Math.pow(normalizedDistance, 2);
+    
+    return glowIntensity;
   };
 
   // Check if a dot is a subtopic of the hovered dot
@@ -1141,21 +1173,106 @@ const ZoomableCanvas = () => {
     return () => clearTimeout(debounceTimer);
   }, [searchQuery, dots, selectedSubject]);
 
+  // Navigate to a specific dot (handles cross-subject navigation)
+  const navigateToDot = (dotIdOrResult) => {
+    console.log('🧭 Navigating to dot:', dotIdOrResult);
+    
+    // Extract necessary info from the parameter
+    let targetDotId, targetSubjectSlug, targetSubject;
+    
+    if (typeof dotIdOrResult === 'object') {
+      // It's a search result object
+      targetDotId = dotIdOrResult.dotId || dotIdOrResult.id;
+      targetSubjectSlug = dotIdOrResult.displaySubjectSlug;
+      targetSubject = subjects.find(s => s.slug === targetSubjectSlug);
+    } else {
+      // It's just a dot ID - try to find it in current dots first
+      targetDotId = dotIdOrResult;
+      const currentDot = dots.find(d => d.id === targetDotId);
+      if (currentDot) {
+        // Found in current view, just select it
+        setSelectedDot(currentDot);
+        setActiveModalTab('overview');
+        return;
+      }
+      
+      // Not in current view, search all dots
+      const dotInAllDots = allDots.find(d => d.id === targetDotId || d.originalId === targetDotId);
+      if (dotInAllDots) {
+        targetSubjectSlug = dotInAllDots.subjectSlug;
+        targetSubject = subjects.find(s => s.slug === targetSubjectSlug);
+      }
+    }
+    
+    // Check if we need to switch subjects
+    const needsSubjectSwitch = targetSubjectSlug && targetSubjectSlug !== selectedSubject?.slug;
+    
+    if (needsSubjectSwitch && targetSubject) {
+      console.log('🔄 Switching to subject:', targetSubject.name);
+      
+      // Set pending dot selection BEFORE switching subjects
+      pendingDotProcessed.current = false;
+      setPendingDotSelection(targetDotId);
+      
+      // Find and click the high-level subject dot to switch subjects
+      const highLevelDot = highLevelDots.find(d => d.subjectSlug === targetSubjectSlug);
+      if (highLevelDot) {
+        handleDotClick(highLevelDot);
+      }
+    } else {
+      // Same subject or no subject info, try to find the dot
+      const targetDot = dots.find(d => {
+        const dotId = typeof targetDotId === 'string' ? parseInt(targetDotId, 10) : targetDotId;
+        return d.id === dotId || d.id === targetDotId || d.originalId === targetDotId;
+      });
+      
+      if (targetDot) {
+        console.log('✅ Found dot:', targetDot.text);
+        setSelectedDot(targetDot);
+        setActiveModalTab('overview');
+      } else {
+        console.warn('⚠️ Could not find dot:', targetDotId);
+      }
+    }
+  };
+
   // Handle pending dot selection after subject change (for cross-subject navigation)
   useEffect(() => {
     // Only process if we have a pending selection, dots are loaded, and we haven't already processed it
     if (pendingDotSelection && dots.length > 0 && selectedSubject && !pendingDotProcessed.current) {
       console.log('🎯 Looking for pending dot:', pendingDotSelection);
+      console.log('🎯 Current dots count:', dots.length);
+      console.log('🎯 Sample dot IDs:', dots.slice(0, 3).map(d => ({ id: d.id, originalId: d.originalId, text: d.text })));
       
       // Mark as being processed to prevent infinite loops
       pendingDotProcessed.current = true;
       
-      // Try to find the dot by ID (convert to number if needed)
-      const dotId = typeof pendingDotSelection === 'string' ? parseInt(pendingDotSelection, 10) : pendingDotSelection;
-      const targetDot = dots.find(d => d.id === dotId || d.id === pendingDotSelection);
+      // Try to find the dot by ID (check multiple ID formats)
+      // The dot ID might be: original numeric ID, string ID, or prefixed ID
+      const targetDot = dots.find(d => {
+        // Check if IDs match directly
+        if (d.id === pendingDotSelection) return true;
+        
+        // Check originalId (non-prefixed ID)
+        if (d.originalId === pendingDotSelection) return true;
+        
+        // Check if the prefixed ID ends with the pending selection
+        // e.g., "operating-systems-123" ends with "123"
+        if (typeof d.id === 'string' && typeof pendingDotSelection === 'string') {
+          const idSuffix = d.id.split('-').pop();
+          if (idSuffix === pendingDotSelection) return true;
+        }
+        
+        // Try numeric comparison
+        const pendingAsNumber = typeof pendingDotSelection === 'string' ? parseInt(pendingDotSelection, 10) : pendingDotSelection;
+        const originalIdAsNumber = typeof d.originalId === 'string' ? parseInt(d.originalId, 10) : d.originalId;
+        if (!isNaN(pendingAsNumber) && !isNaN(originalIdAsNumber) && pendingAsNumber === originalIdAsNumber) return true;
+        
+        return false;
+      });
       
       if (targetDot) {
-        console.log('✅ Found dot:', targetDot.text);
+        console.log('✅ Found dot:', targetDot.text, 'with ID:', targetDot.id);
         // Clear pending selection and reset flag
         setPendingDotSelection(null);
         pendingDotProcessed.current = false;
@@ -1163,8 +1280,18 @@ const ZoomableCanvas = () => {
         // Open the dot modal
         setSelectedDot(targetDot);
         setActiveModalTab('overview');
+        
+        // Center the dot on screen with a slight zoom
+        const newScale = 1.1;
+        const newOffset = {
+          x: window.innerWidth / 2 - targetDot.x,
+          y: window.innerHeight / 2 - targetDot.y,
+        };
+        setOffset(newOffset);
+        setScale(newScale);
       } else {
         console.warn('⚠️ Dot not found:', pendingDotSelection);
+        console.warn('⚠️ Available dot IDs:', dots.slice(0, 5).map(d => d.id));
         // Clear and reset
         setPendingDotSelection(null);
         pendingDotProcessed.current = false;
@@ -1227,12 +1354,19 @@ const ZoomableCanvas = () => {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           topic: selectedDot.text,
           question: question,
           conversationHistory: conversationHistory
         })
       });
+
+      if (response.status === 401) {
+        // User is not authenticated
+        setShowLoginModal(true);
+        return;
+      }
 
       if (!response.ok) {
         throw new Error('Failed to get response from chat API');
@@ -1271,6 +1405,12 @@ const ZoomableCanvas = () => {
     e.preventDefault();
     if (!chatInput.trim() || isChatLoading) return;
 
+    // Check authentication
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
     const userMessage = chatInput.trim();
     const newMessage = {
       id: Date.now(),
@@ -1288,6 +1428,12 @@ const ZoomableCanvas = () => {
 
   const handleQuestionClick = async (question) => {
     if (isChatLoading) return;
+    
+    // Check authentication
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
     
     setChatInput(question);
     // Auto-send the question
@@ -1307,6 +1453,12 @@ const ZoomableCanvas = () => {
 
   const handleAddQuestionToChat = async (questionText) => {
     if (isChatLoading) return;
+    
+    // Check authentication
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
     
     // Switch to chat tab
     setActiveModalTab('chat');
@@ -1518,32 +1670,8 @@ const ZoomableCanvas = () => {
                       setShowSearchResults(false);
                       setSearchQuery('');
                       
-                      // If the topic is from a different subject, navigate to that subject first
-                      if (result.displaySubjectSlug && result.displaySubjectSlug !== selectedSubject?.slug) {
-                        const targetSubject = subjects.find(s => s.slug === result.displaySubjectSlug);
-                        
-                        if (targetSubject) {
-                          // First, find the high-level dot for this subject and click it to load the subject
-                          const highLevelDot = highLevelDots.find(d => d.subjectSlug === result.displaySubjectSlug);
-                          
-                          if (highLevelDot) {
-                            // Set pending dot selection BEFORE clicking the subject
-                            pendingDotProcessed.current = false; // Reset the flag
-                            setPendingDotSelection(result.dotId);
-                            // Click the high-level subject dot to load it
-                            handleDotClick(highLevelDot);
-                          }
-                        }
-                      } else {
-                        // Same subject, just find and open the dot
-                        const dotId = typeof result.dotId === 'string' ? parseInt(result.dotId, 10) : result.dotId;
-                        const targetDot = dots.find(d => d.id === dotId || d.id === result.dotId || d.id === result.id);
-                        
-                        if (targetDot) {
-                          setSelectedDot(targetDot);
-                          setActiveModalTab('overview');
-                        }
-                      }
+                      // Use the new navigation function
+                      navigateToDot(result);
                     }}
                   >
                   <div className="flex items-start justify-between gap-2">
@@ -2062,6 +2190,7 @@ const ZoomableCanvas = () => {
 
           {dots.map((dot) => {
             const proximityOpacity = getProximityOpacity(dot.x, dot.y);
+            const proximityGlow = getProximityGlow(dot.x, dot.y);
             const isSubtopic = isSubtopicOfHovered(dot);
             const isHovered = hoveredDot?.id === dot.id;
             
@@ -2079,8 +2208,7 @@ const ZoomableCanvas = () => {
             // Use full opacity for hovered dot and subtopics, proximity-based for others
             const labelOpacity = isHovered ? 1 : isSubtopic ? 0.95 : proximityOpacity * 0.9;
             
-            // Calculate dot size - keep visual size consistent regardless of zoom
-            // Divide by scale to counteract the zoom transformation
+            // Calculate dot size without proximity scaling - much more performant
             const baseSize = dot.size * 6;
             const minSize = 4; // Minimum dot size in pixels
             const maxSize = 120; // Maximum dot size in pixels
@@ -2149,16 +2277,57 @@ const ZoomableCanvas = () => {
                   style={{
                     width: `${scaledSize}px`,
                     height: `${scaledSize}px`,
-                    backgroundColor: dot.color,
+                    background: `
+                      radial-gradient(circle at 30% 30%, 
+                        rgba(255, 255, 255, 0.3) 0%, 
+                        transparent 50%
+                      ),
+                      radial-gradient(circle at 50% 50%, 
+                        ${dot.color} 0%, 
+                        ${dot.color} 60%,
+                        color-mix(in srgb, ${dot.color} 70%, black) 100%
+                      )
+                    `,
                     transform: isHighLevelSubject && isHovered ? 'scale(1.1)' : 'scale(1)',
-                    transition: 'width 0.2s ease-out, height 0.2s ease-out, box-shadow 0.3s ease-out, transform 0.2s ease-out',
+                    transition: 'width 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease-out, transform 0.2s ease-out',
                     boxShadow: selectedDot?.id === dot.id 
-                      ? `0 0 ${15 / scale}px ${5 / scale}px rgba(100, 200, 255, 0.6), 0 0 ${30 / scale}px ${10 / scale}px rgba(100, 200, 255, 0.4), 0 0 ${45 / scale}px ${15 / scale}px rgba(100, 200, 255, 0.2)`
+                      ? `
+                        inset 0 ${-2 / scale}px ${4 / scale}px rgba(0, 0, 0, 0.3),
+                        inset 0 ${2 / scale}px ${3 / scale}px rgba(255, 255, 255, 0.2),
+                        0 ${4 / scale}px ${8 / scale}px rgba(0, 0, 0, 0.4),
+                        0 0 ${15 / scale}px ${5 / scale}px rgba(100, 200, 255, 0.6), 
+                        0 0 ${30 / scale}px ${10 / scale}px rgba(100, 200, 255, 0.4), 
+                        0 0 ${45 / scale}px ${15 / scale}px rgba(100, 200, 255, 0.2)
+                      `
                       : hoveredDot?.id === dot.id
-                      ? `0 0 ${10 / scale}px ${3 / scale}px rgba(255, 255, 255, 0.8), 0 0 ${20 / scale}px ${6 / scale}px rgba(255, 255, 255, 0.4)`
+                      ? `
+                        inset 0 ${-2 / scale}px ${4 / scale}px rgba(0, 0, 0, 0.3),
+                        inset 0 ${2 / scale}px ${3 / scale}px rgba(255, 255, 255, 0.2),
+                        0 ${4 / scale}px ${8 / scale}px rgba(0, 0, 0, 0.4),
+                        0 0 ${10 / scale}px ${3 / scale}px rgba(255, 255, 255, 0.8), 
+                        0 0 ${20 / scale}px ${6 / scale}px rgba(255, 255, 255, 0.4)
+                      `
                       : isSubtopic
-                      ? `0 0 ${8 / scale}px ${2 / scale}px rgba(233, 213, 255, 0.6), 0 0 ${16 / scale}px ${4 / scale}px rgba(233, 213, 255, 0.3)`
-                      : `0 ${2 / scale}px ${4 / scale}px rgba(0, 0, 0, 0.1)`,
+                      ? `
+                        inset 0 ${-2 / scale}px ${4 / scale}px rgba(0, 0, 0, 0.3),
+                        inset 0 ${2 / scale}px ${3 / scale}px rgba(255, 255, 255, 0.2),
+                        0 ${4 / scale}px ${8 / scale}px rgba(0, 0, 0, 0.4),
+                        0 0 ${8 / scale}px ${2 / scale}px rgba(233, 213, 255, 0.6), 
+                        0 0 ${16 / scale}px ${4 / scale}px rgba(233, 213, 255, 0.3)
+                      `
+                      : proximityGlow > 0
+                      ? `
+                        inset 0 ${-2 / scale}px ${4 / scale}px rgba(0, 0, 0, 0.3),
+                        inset 0 ${2 / scale}px ${3 / scale}px rgba(255, 255, 255, 0.2),
+                        0 ${4 / scale}px ${8 / scale}px rgba(0, 0, 0, 0.4),
+                        0 0 ${8 / scale}px ${3 / scale}px rgba(255, 255, 255, ${proximityGlow * 0.6}), 
+                        0 0 ${16 / scale}px ${6 / scale}px rgba(255, 255, 255, ${proximityGlow * 0.3})
+                      `
+                      : `
+                        inset 0 ${-2 / scale}px ${4 / scale}px rgba(0, 0, 0, 0.3),
+                        inset 0 ${2 / scale}px ${3 / scale}px rgba(255, 255, 255, 0.2),
+                        0 ${4 / scale}px ${8 / scale}px rgba(0, 0, 0, 0.4)
+                      `,
                     pointerEvents: 'none',
                   }}
                 />
@@ -2265,110 +2434,103 @@ const ZoomableCanvas = () => {
               {/* Overview Tab */}
               {activeModalTab === 'overview' && (
                 <div className="space-y-8">
-                  {/* YouTube Video Section */}
-                  <div className="p-6 rounded-lg border border-[rgba(255,255,255,0.12)]" style={{
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
-                  }}>
-                    <h3 className="text-xl font-semibold mb-4 text-white">Video Tutorial</h3>
-                    <div className="aspect-video bg-black flex items-center justify-center overflow-hidden rounded-lg border border-[rgba(255,255,255,0.12)] mb-4">
-                      {(() => {
-                        const availableVideos = selectedDot.videos || selectedDot.videoUrls || (selectedDot.videoUrl ? [selectedDot.videoUrl] : []);
-                        const currentVideo = availableVideos[selectedVideoIndex];
-                        
-                        // Convert YouTube watch URLs to embed URLs
-                        const getEmbedUrl = (url) => {
-                          if (!url) return null;
-                          const videoIdMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
-                          if (videoIdMatch) {
-                            return `https://www.youtube.com/embed/${videoIdMatch[1]}`;
-                          }
-                          return url; // Return as-is if already in embed format or not YouTube
-                        };
-                        
-                        const embedUrl = getEmbedUrl(currentVideo);
-                        
-                        return embedUrl ? (
-                          <iframe
-                            className="w-full h-full"
-                            src={embedUrl}
-                            title={`${selectedDot.text} Tutorial ${selectedVideoIndex + 1}`}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
-                        ) : (
-                          <div className="text-center text-gray-300 py-12">
-                            <svg className="w-20 h-20 mx-auto mb-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
-                            </svg>
-                            <p className="text-lg font-medium text-white">No video available for this topic</p>
-                            <p className="text-sm mt-2 text-gray-300">Check back later for tutorials</p>
-                          </div>
-                        );
-                      })()}
-                    </div>
+                  {/* YouTube Video Section - Only show if videos are available */}
+                  {(() => {
+                    const availableVideos = selectedDot.videos || selectedDot.videoUrls || (selectedDot.videoUrl ? [selectedDot.videoUrl] : []);
+                    if (availableVideos.length === 0) return null;
                     
-                    {/* Video Selector */}
-                    {(() => {
-                      const availableVideos = selectedDot.videos || selectedDot.videoUrls || (selectedDot.videoUrl ? [selectedDot.videoUrl] : []);
-                      if (availableVideos.length <= 1) return null;
-                      
-                      return (
-                        <div className="space-y-3">
-                          <button
-                            onClick={() => setShowVideoSelector(!showVideoSelector)}
-                            className="w-full py-2.5 px-4 rounded-lg transition-all border border-[rgba(100,149,237,0.4)] hover:border-[rgba(100,149,237,0.6)] text-white font-semibold"
-                            style={{
-                              background: 'linear-gradient(135deg, rgba(100,149,237,0.2) 0%, rgba(100,149,237,0.1) 100%)'
-                            }}
-                          >
-                            {showVideoSelector ? 'Hide Video Options' : 'Show another video'}
-                          </button>
-                          
-                          {showVideoSelector && (
-                            <div className="grid grid-cols-1 gap-2 p-3 rounded-lg border border-[rgba(255,255,255,0.12)]" style={{
-                              background: 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%)'
-                            }}>
-                              {availableVideos.map((videoUrl, index) => (
-                                <button
-                                  key={index}
-                                  onClick={() => {
-                                    setSelectedVideoIndex(index);
-                                    setShowVideoSelector(false);
-                                  }}
-                                  className={`w-full text-left p-3 rounded-lg transition-all border ${
-                                    selectedVideoIndex === index
-                                      ? 'border-[#6495ed]'
-                                      : 'border-transparent hover:border-[rgba(255,255,255,0.2)]'
-                                  }`}
-                                  style={{
-                                    background: 'transparent'
-                                  }}
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-semibold ${
-                                      selectedVideoIndex === index
-                                        ? 'bg-transparent border border-[#6495ed] text-[#6495ed]'
-                                        : 'bg-transparent border border-[rgba(255,255,255,0.2)] text-gray-400'
-                                    }`}>
-                                      {index + 1}
-                                    </div>
-                                    <span className={`text-sm ${
-                                      selectedVideoIndex === index ? 'text-white font-medium' : 'text-gray-400'
-                                    }`}>
-                                      Video Tutorial {index + 1}
-                                    </span>
-                                    {selectedVideoIndex === index && (
-                                      <span className="ml-auto text-xs text-[#6495ed]">Currently playing</span>
-                                    )}
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          )}
+                    return (
+                      <div className="p-6 rounded-lg border border-[rgba(255,255,255,0.12)]" style={{
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
+                      }}>
+                        <h3 className="text-xl font-semibold mb-4 text-white">Video Tutorial</h3>
+                        <div className="aspect-video bg-black flex items-center justify-center overflow-hidden rounded-lg border border-[rgba(255,255,255,0.12)] mb-4">
+                          {(() => {
+                            const currentVideo = availableVideos[selectedVideoIndex];
+                            
+                            // Convert YouTube watch URLs to embed URLs
+                            const getEmbedUrl = (url) => {
+                              if (!url) return null;
+                              const videoIdMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+                              if (videoIdMatch) {
+                                return `https://www.youtube.com/embed/${videoIdMatch[1]}`;
+                              }
+                              return url; // Return as-is if already in embed format or not YouTube
+                            };
+                            
+                            const embedUrl = getEmbedUrl(currentVideo);
+                            
+                            return embedUrl ? (
+                              <iframe
+                                className="w-full h-full"
+                                src={embedUrl}
+                                title={`${selectedDot.text} Tutorial ${selectedVideoIndex + 1}`}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            ) : null;
+                          })()}
                         </div>
-                      );
-                    })()}
-                  </div>
+                        
+                        {/* Video Selector */}
+                        {availableVideos.length > 1 && (
+                          <div className="space-y-3">
+                            <button
+                              onClick={() => setShowVideoSelector(!showVideoSelector)}
+                              className="w-full py-2.5 px-4 rounded-lg transition-all border border-[rgba(100,149,237,0.4)] hover:border-[rgba(100,149,237,0.6)] text-white font-semibold"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(100,149,237,0.2) 0%, rgba(100,149,237,0.1) 100%)'
+                              }}
+                            >
+                              {showVideoSelector ? 'Hide Video Options' : 'Show another video'}
+                            </button>
+                            
+                            {showVideoSelector && (
+                              <div className="grid grid-cols-1 gap-2 p-3 rounded-lg border border-[rgba(255,255,255,0.12)]" style={{
+                                background: 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%)'
+                              }}>
+                                {availableVideos.map((videoUrl, index) => (
+                                  <button
+                                    key={index}
+                                    onClick={() => {
+                                      setSelectedVideoIndex(index);
+                                      setShowVideoSelector(false);
+                                    }}
+                                    className={`w-full text-left p-3 rounded-lg transition-all border ${
+                                      selectedVideoIndex === index
+                                        ? 'border-[#6495ed]'
+                                        : 'border-transparent hover:border-[rgba(255,255,255,0.2)]'
+                                    }`}
+                                    style={{
+                                      background: 'transparent'
+                                    }}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-semibold ${
+                                        selectedVideoIndex === index
+                                          ? 'bg-transparent border border-[#6495ed] text-[#6495ed]'
+                                          : 'bg-transparent border border-[rgba(255,255,255,0.2)] text-gray-400'
+                                      }`}>
+                                        {index + 1}
+                                      </div>
+                                      <span className={`text-sm ${
+                                        selectedVideoIndex === index ? 'text-white font-medium' : 'text-gray-400'
+                                      }`}>
+                                        Video Tutorial {index + 1}
+                                      </span>
+                                      {selectedVideoIndex === index && (
+                                        <span className="ml-auto text-xs text-[#6495ed]">Currently playing</span>
+                                      )}
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Summary Section */}
                   <div className="p-6 rounded-lg border border-[rgba(255,255,255,0.12)]" style={{
@@ -2901,6 +3063,7 @@ const ZoomableCanvas = () => {
       )}
 
       {showFeedback && <FeedbackModal />}
+      {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
     </div>
   );
 };
