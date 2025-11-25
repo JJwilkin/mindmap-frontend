@@ -2459,6 +2459,7 @@ const ZoomableCanvas = () => {
         </div>
       </div>
 
+      {/* Learning Paths UI - temporarily disabled
       {!showPathsModal && (
         <button
           onClick={() => setShowPathsModal(true)}
@@ -2469,6 +2470,7 @@ const ZoomableCanvas = () => {
       )}
 
       {showPathsModal && <PathsModal />}
+      */}
 
       {/* Line Hover Tooltip */}
       {hoveredLine && selectedDot && (() => {
