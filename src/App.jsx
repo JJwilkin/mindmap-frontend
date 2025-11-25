@@ -28,6 +28,8 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/app" element={<MainApp />} />
+          <Route path="/app/:subjectSlug" element={<MainApp />} />
+          <Route path="/app/:subjectSlug/:topicSlug" element={<MainApp />} />
         </Routes>
       </Router>
       <Analytics />

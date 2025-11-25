@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Lottie from 'lottie-react';
@@ -7,11 +8,48 @@ import { useAuth } from './context/AuthContext';
 import LoginModal from './components/LoginModal';
 import loadingAnimation from './assets/loading.json';
 
+// Helper function to create URL-friendly slugs from topic text
+const createTopicSlug = (text) => {
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+};
+
+// Helper function to find a dot by its topic slug within a subject
+const findDotByTopicSlug = (dots, topicSlug) => {
+  if (!topicSlug || !dots || dots.length === 0) return null;
+  
+  // First try exact match
+  const exactMatch = dots.find(dot => createTopicSlug(dot.text) === topicSlug);
+  if (exactMatch) return exactMatch;
+  
+  // Try partial match (in case of slight differences)
+  const partialMatch = dots.find(dot => {
+    const dotSlug = createTopicSlug(dot.text);
+    return dotSlug.includes(topicSlug) || topicSlug.includes(dotSlug);
+  });
+  
+  return partialMatch || null;
+};
+
 // Local testing mode - set to true to bypass API and use local JSON files
 // You can also set VITE_USE_LOCAL_DATA=true in your .env file
 const USE_LOCAL_DATA = import.meta.env.VITE_USE_LOCAL_DATA === 'true' || false;
 
 const ZoomableCanvas = () => {
+  // Router hooks for URL-based navigation
+  const navigate = useNavigate();
+  const { subjectSlug: urlSubjectSlug, topicSlug: urlTopicSlug } = useParams();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialNavigationDone = useRef(false);
+  const isNavigatingFromUrl = useRef(false);
+  const urlExpandedParam = searchParams.get('expanded') === 'true';
+  
   const [subjects, setSubjects] = useState([]);
   const [allDots, setAllDots] = useState([]); // Store all dots from all subjects
   const [allLines, setAllLines] = useState({ hierarchical: [], connections: [] }); // Store all lines
@@ -61,7 +99,7 @@ const ZoomableCanvas = () => {
   const [isResizingChat, setIsResizingChat] = useState(false);
   
   // Authentication
-  const { user, getToken, justLoggedIn, clearJustLoggedIn } = useAuth();
+  const { user, getToken, justLoggedIn, clearJustLoggedIn, returnUrl, clearReturnUrl } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Function to load local JSON data
@@ -433,10 +471,17 @@ const ZoomableCanvas = () => {
         console.log('🎯 High-level dots created:', highLevelSubjectDots.length);
         console.log('🎯 High-level dots:', highLevelSubjectDots);
         
-        // Initially show high-level view (no subject selected)
-        setDots(highLevelSubjectDots);
-        setLines({ hierarchical: [], connections: [] });
-        setSelectedSubject(null);
+        // Only set initial high-level view if NOT navigating from URL
+        // URL navigation will handle setting the correct view
+        const currentPath = window.location.pathname;
+        const hasUrlParams = currentPath.startsWith('/app/') && currentPath !== '/app' && currentPath !== '/app/';
+        
+        if (!hasUrlParams) {
+          // Initially show high-level view (no subject selected)
+          setDots(highLevelSubjectDots);
+          setLines({ hierarchical: [], connections: [] });
+          setSelectedSubject(null);
+        }
         
         setLoading(false);
       } catch (error) {
@@ -466,6 +511,152 @@ const ZoomableCanvas = () => {
       clearJustLoggedIn(); // Clear the flag so this only runs once
     }
   }, [justLoggedIn, clearJustLoggedIn]);
+
+  // Handle return URL navigation after OAuth (navigate to where user was before login)
+  useEffect(() => {
+    if (returnUrl && !loading) {
+      console.log('🔗 Navigating to return URL after OAuth:', returnUrl);
+      clearReturnUrl();
+      // Use window.location for a full navigation - this ensures URL params are properly read
+      // The token is already in localStorage so auth will persist
+      window.location.href = returnUrl;
+    }
+  }, [returnUrl, loading, clearReturnUrl]);
+
+  // Handle URL-based navigation on initial load
+  useEffect(() => {
+    // Only run once after data is loaded
+    if (initialNavigationDone.current || loading) return;
+    if (!urlSubjectSlug) {
+      // No URL params - mark as done so URL updates can work
+      initialNavigationDone.current = true;
+      return;
+    }
+    if (subjects.length === 0 && !USE_LOCAL_DATA) return; // Data not loaded yet
+    if (highLevelDots.length === 0) return; // High level dots not ready
+    
+    console.log('🔗 URL navigation:', { urlSubjectSlug, urlTopicSlug });
+    initialNavigationDone.current = true;
+    isNavigatingFromUrl.current = true;
+    
+    // Find the subject by slug
+    const targetHighLevelDot = highLevelDots.find(d => d.subjectSlug === urlSubjectSlug);
+    
+    if (targetHighLevelDot) {
+      // If there's a topic slug, set it as pending selection
+      if (urlTopicSlug) {
+        pendingDotProcessed.current = false;
+        setPendingDotSelection({ topicSlug: urlTopicSlug, subjectSlug: urlSubjectSlug });
+      }
+      
+      // Simulate clicking the high-level subject dot
+      // This will trigger the subject navigation
+      // NOTE: Don't set isNavigatingFromUrl to false here - it will be done when navigation completes
+      handleDotClick(targetHighLevelDot);
+    } else {
+      // Subject not found, clear navigation flag
+      isNavigatingFromUrl.current = false;
+    }
+  }, [loading, subjects, highLevelDots, urlSubjectSlug, urlTopicSlug]);
+
+  // Handle pending dot selection from URL navigation
+  useEffect(() => {
+    if (!pendingDotSelection?.topicSlug || dots.length === 0 || !selectedSubject) return;
+    if (pendingDotProcessed.current) return;
+    
+    // Only handle URL-based navigation (topicSlug-based)
+    if (typeof pendingDotSelection !== 'object' || !pendingDotSelection.topicSlug) return;
+    
+    console.log('🎯 Looking for topic by slug:', pendingDotSelection.topicSlug);
+    pendingDotProcessed.current = true;
+    
+    const targetDot = findDotByTopicSlug(dots, pendingDotSelection.topicSlug);
+    
+    if (targetDot) {
+      console.log('✅ Found topic:', targetDot.text);
+      setPendingDotSelection(null);
+      setSelectedDot(targetDot);
+      setActiveModalTab('overview');
+      
+      // Center the dot on screen
+      const newScale = 1.1;
+      const newOffset = {
+        x: window.innerWidth / 2 - targetDot.x,
+        y: window.innerHeight / 2 - targetDot.y,
+      };
+      setOffset(newOffset);
+      setScale(newScale);
+    } else {
+      console.warn('⚠️ Topic not found:', pendingDotSelection.topicSlug);
+      setPendingDotSelection(null);
+    }
+    
+    // Navigation complete, allow URL updates
+    isNavigatingFromUrl.current = false;
+  }, [pendingDotSelection, dots, selectedSubject]);
+
+  // Clear URL navigation flag when subject is loaded (for subject-only URLs without topic)
+  useEffect(() => {
+    if (isNavigatingFromUrl.current && selectedSubject && !urlTopicSlug) {
+      // Subject loaded and no topic to navigate to - navigation complete
+      isNavigatingFromUrl.current = false;
+    }
+  }, [selectedSubject, urlTopicSlug]);
+
+  // Update URL when subject changes (but not during initial URL navigation)
+  useEffect(() => {
+    if (isNavigatingFromUrl.current) return;
+    if (!initialNavigationDone.current) return; // Don't update during initial load
+    
+    if (selectedSubject?.slug) {
+      const newPath = `/app/${selectedSubject.slug}`;
+      if (location.pathname !== newPath && !location.pathname.startsWith(`/app/${selectedSubject.slug}/`)) {
+        navigate(newPath, { replace: true });
+      }
+    }
+  }, [selectedSubject, navigate, location.pathname]);
+
+  // Update URL when a dot is selected (but not during initial URL navigation)
+  useEffect(() => {
+    if (isNavigatingFromUrl.current) return;
+    if (!initialNavigationDone.current) return;
+    
+    if (selectedDot && selectedSubject?.slug && !selectedDot.isHighLevel) {
+      const topicSlug = createTopicSlug(selectedDot.text);
+      const newPath = `/app/${selectedSubject.slug}/${topicSlug}`;
+      if (location.pathname !== newPath) {
+        navigate(newPath, { replace: true });
+      }
+    } else if (!selectedDot && selectedSubject?.slug) {
+      // Dot deselected, go back to subject URL
+      const newPath = `/app/${selectedSubject.slug}`;
+      if (location.pathname !== newPath) {
+        navigate(newPath, { replace: true });
+      }
+    }
+  }, [selectedDot, selectedSubject, navigate, location.pathname]);
+
+  // Set expanded state from URL param when dot is selected from URL
+  useEffect(() => {
+    if (selectedDot && urlExpandedParam && !showFullContent) {
+      setShowFullContent(true);
+    }
+  }, [selectedDot, urlExpandedParam]);
+
+  // Update URL with expanded param when showFullContent changes
+  useEffect(() => {
+    if (!selectedDot || isNavigatingFromUrl.current) return;
+    
+    const currentExpanded = searchParams.get('expanded') === 'true';
+    
+    if (showFullContent && !currentExpanded) {
+      // Add expanded param
+      setSearchParams({ expanded: 'true' }, { replace: true });
+    } else if (!showFullContent && currentExpanded) {
+      // Remove expanded param
+      setSearchParams({}, { replace: true });
+    }
+  }, [showFullContent, selectedDot, searchParams, setSearchParams]);
 
   const handleWheel = (e) => {
     e.preventDefault();
@@ -777,6 +968,7 @@ const ZoomableCanvas = () => {
         setLines({ hierarchical: [], connections: [] });
         setSelectedSubject(null);
         setShowExitSubjectPrompt(false);
+        navigate('/app', { replace: true });
       } else {
         // First Esc press - show prompt
         setShowExitSubjectPrompt(true);
@@ -1269,6 +1461,9 @@ const ZoomableCanvas = () => {
 
   // Handle pending dot selection after subject change (for cross-subject navigation)
   useEffect(() => {
+    // Skip if this is a URL-based navigation (handled by separate useEffect)
+    if (pendingDotSelection && typeof pendingDotSelection === 'object' && pendingDotSelection.topicSlug) return;
+    
     // Only process if we have a pending selection, dots are loaded, and we haven't already processed it
     if (pendingDotSelection && dots.length > 0 && selectedSubject && !pendingDotProcessed.current) {
       console.log('🎯 Looking for pending dot:', pendingDotSelection);

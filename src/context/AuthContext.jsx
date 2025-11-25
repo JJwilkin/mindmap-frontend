@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false); // Indicates auth initialization is complete
   const [justLoggedIn, setJustLoggedIn] = useState(false); // Indicates user just completed OAuth
+  const [returnUrl, setReturnUrl] = useState(null); // URL to return to after OAuth
 
   // Get the auth token from localStorage
   const getToken = () => {
@@ -84,7 +85,11 @@ export const AuthProvider = ({ children }) => {
         // Save token to localStorage
         setToken(token);
         
-        // Remove token from URL for security
+        // Get the stored return URL (saved before OAuth redirect)
+        const storedReturnUrl = localStorage.getItem('authReturnUrl');
+        localStorage.removeItem('authReturnUrl'); // Clean up
+        
+        // Clean up the URL (remove token param)
         window.history.replaceState({}, document.title, window.location.pathname);
         
         // Check auth with the new token
@@ -93,6 +98,12 @@ export const AuthProvider = ({ children }) => {
         // Signal that user just logged in (triggers data refresh in components)
         setJustLoggedIn(true);
         console.log('✓ OAuth complete, triggering data refresh');
+        
+        // Store the return URL in state so components can handle navigation via React Router
+        if (storedReturnUrl && storedReturnUrl !== '/app' && storedReturnUrl !== '/') {
+          console.log('✓ Setting return URL:', storedReturnUrl);
+          setReturnUrl(storedReturnUrl);
+        }
       } else {
         // Check existing token
         await checkAuth();
@@ -119,6 +130,11 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = () => {
+    // Store the current URL so we can return after OAuth
+    const currentUrl = window.location.pathname + window.location.search;
+    localStorage.setItem('authReturnUrl', currentUrl);
+    console.log('✓ Storing return URL:', currentUrl);
+    
     // Redirect to Google OAuth
     window.location.href = getApiEndpoint('/api/auth/google');
   };
@@ -147,12 +163,19 @@ export const AuthProvider = ({ children }) => {
     setJustLoggedIn(false);
   };
 
+  // Clear the return URL after navigation
+  const clearReturnUrl = () => {
+    setReturnUrl(null);
+  };
+
   const value = {
     user,
     loading,
     authReady,      // True when initial auth check is complete
     justLoggedIn,   // True when user just completed OAuth redirect
     clearJustLoggedIn,
+    returnUrl,      // URL to navigate to after OAuth (if any)
+    clearReturnUrl,
     login,
     logout,
     checkAuth,
