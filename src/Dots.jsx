@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import emailjs from '@emailjs/browser';
+import Lottie from 'lottie-react';
 import { getApiEndpoint } from './utils/api.js';
 import { useAuth } from './context/AuthContext';
 import LoginModal from './components/LoginModal';
+import loadingAnimation from './assets/loading.json';
 
 // Local testing mode - set to true to bypass API and use local JSON files
 // You can also set VITE_USE_LOCAL_DATA=true in your .env file
@@ -19,7 +20,7 @@ const ZoomableCanvas = () => {
   const [highLevelDots, setHighLevelDots] = useState([]); // Dots representing high-level subjects
   const [dots, setDots] = useState([]); // Currently visible dots (filtered by selectedSubject)
   const [lines, setLines] = useState({ hierarchical: [], connections: [] }); // Currently visible lines
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(0.85);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [selectedDot, setSelectedDot] = useState(null);
   const [hoveredDot, setHoveredDot] = useState(null);
@@ -645,7 +646,7 @@ const ZoomableCanvas = () => {
         setShowExitSubjectPrompt(false);
         
         // Reset view and zoom to center
-        setScale(1);
+        setScale(0.85);
         setOffset({ x: 0, y: 0 });
         setSelectedDot(null);
         setActivePath(null);
@@ -707,7 +708,7 @@ const ZoomableCanvas = () => {
         setShowExitSubjectPrompt(false);
         
         // Reset view and zoom to center
-        setScale(1);
+        setScale(0.85);
         setOffset({ x: 0, y: 0 });
         setSelectedDot(null);
         setActivePath(null);
@@ -762,7 +763,7 @@ const ZoomableCanvas = () => {
       setActivePath(null);
       setPathDots([]);
       setPathPosition(0);
-      setScale(1);
+      setScale(0.85);
       setOffset({ x: 0, y: 0 });
       setShowExitSubjectPrompt(false);
       return;
@@ -782,13 +783,13 @@ const ZoomableCanvas = () => {
         // Auto-hide prompt after 3 seconds
         setTimeout(() => setShowExitSubjectPrompt(false), 3000);
       }
-      setScale(1);
+      setScale(0.85);
       setOffset({ x: 0, y: 0 });
       return;
     }
     
     // Already at high level, just reset view
-    setScale(1);
+    setScale(0.85);
     setOffset({ x: 0, y: 0 });
     setShowExitSubjectPrompt(false);
   };
@@ -819,7 +820,7 @@ const ZoomableCanvas = () => {
 
   const PathsModal = () => {
     return (
-      <div className="fixed right-4 top-20 bg-white rounded-lg p-4 shadow-lg z-50 w-64">
+      <div className="fixed right-4 top-32 bg-white rounded-lg p-4 shadow-lg z-50 w-64">
         <h3 className="font-bold text-black mb-4 text-lg">Available Learning Paths</h3>
         
         {activePath ? (
@@ -1389,13 +1390,19 @@ const ZoomableCanvas = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      // Include only the transcript for the currently selected video
+      const allTranscripts = selectedDot.transcripts || [];
+      const currentTranscript = allTranscripts[selectedVideoIndex];
+      const transcripts = currentTranscript ? [currentTranscript] : [];
+      
       const response = await fetch(getApiEndpoint('/api/chat'), {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
           topic: selectedDot.text,
           question: question,
-          conversationHistory: conversationHistory
+          conversationHistory: conversationHistory,
+          transcripts: transcripts
         })
       });
 
@@ -1419,7 +1426,8 @@ const ZoomableCanvas = () => {
         text: data.response || 'Sorry, I could not generate a response.',
         sender: 'ai',
         timestamp: new Date().toISOString(),
-        followUpSuggestions: followUpSuggestions
+        followUpSuggestions: followUpSuggestions,
+        hasVideoContext: data.hasVideoContext || false
       };
       
       setChatMessages(prev => [...prev, aiResponse]);
@@ -1591,34 +1599,57 @@ const ZoomableCanvas = () => {
 
   const FeedbackModal = () => {
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState(null);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
       e.preventDefault();
+      setIsSubmitting(true);
+      setError(null);
+      
       const feedbackText = e.target.querySelector('textarea').value;
       const emailText = e.target.querySelector('input[type="email"]').value;
-      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-      // Log the values being used
       
-      emailjs.send(
-        serviceId,
-        templateId,
-        { message: feedbackText, email: emailText },
-        publicKey
-      ).then(
-        (result) => {
-          console.log('Email sent successfully:', result.text);
-          setIsSubmitted(true);
-          setTimeout(() => {
-            setShowFeedback(false);
-            setIsSubmitted(false);
-          }, 2000);
-        },
-        (error) => {
-          console.error('Failed to send email:', error.text);
+      try {
+        const apiEndpoint = getApiEndpoint('/api/feedback');
+        const token = getToken();
+        
+        const headers = {
+          'Content-Type': 'application/json',
+        };
+        
+        // Add auth token if user is logged in
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
         }
-      );
+        
+        const response = await fetch(apiEndpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            message: feedbackText,
+            email: emailText || undefined,
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to submit feedback');
+        }
+        
+        const data = await response.json();
+        console.log('Feedback submitted successfully:', data);
+        
+        setIsSubmitted(true);
+        setTimeout(() => {
+          setShowFeedback(false);
+          setIsSubmitted(false);
+        }, 2000);
+      } catch (error) {
+        console.error('Error submitting feedback:', error);
+        setError('Failed to submit feedback. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
     };
 
     return (
@@ -1641,20 +1672,28 @@ const ZoomableCanvas = () => {
               <h2 className="text-xl font-bold mb-4 text-gray-900">Send Feedback</h2>
               <form onSubmit={handleSubmit}>
                 <textarea
-                  className="w-full h-32 p-2 border rounded-lg mb-4 text-black placeholder-gray-400"
+                  className="w-full h-32 p-2 border rounded-lg mb-4 bg-white text-black placeholder-gray-400"
                   placeholder="Tell us what you think...we really appreciate it!"
                   required
+                  disabled={isSubmitting}
                 />
                 <input
                   type="email"
-                  className="w-full p-2 border rounded-lg mb-4 text-black placeholder-gray-400"
+                  className="w-full p-2 border rounded-lg mb-4 bg-white text-black placeholder-gray-400"
                   placeholder="Email (optional - for follow-up!)"
+                  disabled={isSubmitting}
                 />
+                {error && (
+                  <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-lg text-sm">
+                    {error}
+                  </div>
+                )}
                 <button
                   type="submit"
-                  className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+                  className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSubmitting}
                 >
-                  Send Feedback
+                  {isSubmitting ? 'Sending...' : 'Send Feedback'}
                 </button>
               </form>
             </>
@@ -1785,16 +1824,28 @@ const ZoomableCanvas = () => {
 
       {/* Modal */}
       {selectedDot && (
-        <div className="fixed left-4 top-1/2 -translate-y-1/2 w-80 rounded-lg shadow-lg p-6 z-50 max-h-[85vh] overflow-y-auto border border-[rgba(255,255,255,0.12)]" style={{
-          background: '#1a1d29'
+        <div className="fixed inset-y-0 left-0 z-50 flex items-center" style={{
+          paddingLeft: '1rem',
+          paddingTop: '76px'
         }}>
-          <button 
-            onClick={() => setSelectedDot(null)}
-            className="absolute top-2 right-2 text-gray-300 hover:text-white text-2xl font-bold w-8 h-8 flex items-center justify-center p-0 rounded-full bg-[#1f2329] hover:bg-[#2a2d3a] transition-all"
-          >
-            ×
-          </button>
-          <h2 className="text-xl font-bold mb-4 text-white">{selectedDot.text}</h2>
+          <div className="flex flex-col overflow-hidden" style={{
+            width: '320px',
+            height: 'calc(100vh - 76px - 2rem)',
+            background: '#1a1d29',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+            padding: '24px',
+            position: 'relative'
+          }}>
+            <button 
+              onClick={() => setSelectedDot(null)}
+              className="absolute top-2 right-2 text-gray-300 hover:text-white text-2xl font-bold w-8 h-8 flex items-center justify-center p-0 rounded-full bg-[#1f2329] hover:bg-[#2a2d3a] transition-all z-10"
+            >
+              ×
+            </button>
+            <div className="overflow-y-auto flex-1">
+              <h2 className="text-xl font-bold mb-4 text-white">{selectedDot.text}</h2>
           <p className="text-gray-300 mb-4 text-sm">
             Position: ({selectedDot.x}, {selectedDot.y})
           </p>
@@ -1982,12 +2033,14 @@ const ZoomableCanvas = () => {
               </button>
             </div>
           )}
+            </div>
+          </div>
         </div>
       )}
 
       <button
         onClick={handleReset}
-        className="fixed top-4 right-4 px-4 py-2 bg-white rounded-md shadow-lg z-10 text-black flex items-center gap-2"
+        className="fixed top-20 right-4 px-4 py-2 bg-white rounded-md shadow-lg z-10 text-black flex items-center gap-2"
       >
         <span>
           {selectedDot && selectedSubject 
@@ -2017,16 +2070,25 @@ const ZoomableCanvas = () => {
         </div>
       )}
 
-      <button
-        onClick={() => setShowFeedback(true)}
-        className="fixed bottom-4 right-4 px-4 py-2 bg-white rounded-md shadow-lg z-10 text-black"
-      >
-        Feedback
-      </button>
+      <div className="fixed bottom-4 right-4 flex flex-col items-end gap-2 z-10">
+        <button
+          onClick={() => setShowFeedback(true)}
+          className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-md shadow-lg text-white font-medium"
+        >
+          Feedback
+        </button>
+        <span className="text-xs text-white bg-gray-800 bg-opacity-80 px-2 py-1 rounded">
+          We're still in alpha! All feedback is appreciated!
+        </span>
+      </div>
 
       {loading && (
         <div className="fixed inset-0 bg-[#0a0e27] flex items-center justify-center z-50">
-          <div className="text-white text-xl">Loading subjects...</div>
+          <Lottie 
+            animationData={loadingAnimation} 
+            loop={true}
+            style={{ width: 500, height: 500 }}
+          />
         </div>
       )}
 
@@ -2400,7 +2462,7 @@ const ZoomableCanvas = () => {
       {!showPathsModal && (
         <button
           onClick={() => setShowPathsModal(true)}
-          className="fixed right-4 top-20 bg-white rounded-lg p-2 shadow-lg z-50"
+          className="fixed right-4 top-32 bg-white rounded-lg p-2 shadow-lg z-50"
         >
           <span className="text-gray-800">Show Learning Paths</span>
         </button>
@@ -2431,7 +2493,7 @@ const ZoomableCanvas = () => {
 
       {/* Full Content Modal */}
       {showFullContent && selectedDot && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => {
             setShowFullContent(false);
             setChatMessages([]);
@@ -2439,8 +2501,12 @@ const ZoomableCanvas = () => {
             setQuizAnswers({});
             setShowQuizResults(false);
           }} />
-          <div className="relative max-w-[1400px] w-full max-h-[90vh] flex flex-col overflow-hidden" style={{
-            marginRight: 'calc(450px + 2rem)', // Account for chat modal width + spacing
+          <div className="absolute flex flex-col overflow-hidden" style={{
+            top: 'calc(76px + 1rem)',
+            left: '1rem',
+            right: `calc(${chatWidth}px + 2rem)`,
+            height: 'calc(100vh - 76px - 2rem)',
+            maxWidth: '1400px',
             background: '#1a1d29',
             borderRadius: '12px',
             border: '1px solid rgba(255, 255, 255, 0.12)',
@@ -2947,7 +3013,8 @@ const ZoomableCanvas = () => {
       {/* Separate Chat Modal */}
       {showFullContent && selectedDot && (
         <div className="fixed inset-y-0 right-0 z-50 flex items-center" style={{
-          paddingRight: '1rem'
+          paddingRight: '1rem',
+          paddingTop: '76px'
         }}>
           {/* Resize Handle */}
           <div 
@@ -2963,7 +3030,7 @@ const ZoomableCanvas = () => {
 
           <div className="flex flex-col overflow-hidden ml-auto" style={{
             width: `${chatWidth}px`,
-            height: 'calc(100vh - 2rem)',
+            height: 'calc(100vh - 76px - 2rem)',
             background: '#1a1d29',
             borderRadius: '12px',
             border: '1px solid rgba(255, 255, 255, 0.12)',
@@ -2974,6 +3041,20 @@ const ZoomableCanvas = () => {
               <div>
                 <h3 className="text-xl font-semibold text-white mb-1">Ask Questions</h3>
                 <p className="text-sm text-gray-300">Get instant answers about {selectedDot.text}</p>
+                {/* Video Context Indicator */}
+                {selectedDot.transcripts && selectedDot.transcripts.length > 0 && selectedDot.transcripts[selectedVideoIndex] && (
+                  <div className="flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full w-fit" style={{
+                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(79, 70, 229, 0.15) 100%)',
+                    border: '1px solid rgba(147, 51, 234, 0.3)'
+                  }}>
+                    <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-xs font-medium text-purple-300">
+                      Using Video {selectedVideoIndex + 1} transcript{selectedDot.transcripts.length > 1 ? ` (of ${selectedDot.transcripts.length})` : ''}
+                    </span>
+                  </div>
+                )}
               </div>
               <button 
                 onClick={() => {
@@ -3041,6 +3122,15 @@ const ZoomableCanvas = () => {
                           <div className="text-sm leading-relaxed markdown-content">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.text}</ReactMarkdown>
                           </div>
+                          {/* Video context indicator for AI messages */}
+                          {message.sender === 'ai' && message.hasVideoContext && (
+                            <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-[rgba(147,51,234,0.2)]">
+                              <svg className="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                              <span className="text-xs text-purple-400">Response informed by video transcripts</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                       {/* Show follow-up suggestions below AI messages */}
