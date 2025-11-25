@@ -1,0 +1,142 @@
+.landing-page {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgb(17, 24, 39);
+  padding: 0 5%;
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: #fff;
+}
+
+.landing-content {
+  flex: 1;
+  max-width: 600px;
+  padding-right: 50px;
+  z-index: 10;
+}
+
+.landing-title {
+  font-size: 4rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.landing-subtitle {
+  font-size: 1.25rem;
+  color: #ccc;
+  margin-bottom: 2.5rem;
+  line-height: 1.5;
+}
+
+.landing-actions {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.btn-primary {
+  background-color: #ff6b00; /* Orange color from the screenshot */
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: #ff6b00;
+  border: 2px solid #ff6b00;
+  padding: 12px 30px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 30px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.btn-google {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: white;
+  color: #3c4043;
+  border: 1px solid #dadce0;
+  padding: 12px 30px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-google:hover {
+  background-color: #f7f8f8;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3);
+}
+
+.google-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.landing-image-container {
+  flex: 1.5;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.landing-image {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  /* If the image has a background that needs to blend, mix-blend-mode might help if it's white */
+  /* mix-blend-mode: multiply; */ 
+}
+
+@media (max-width: 768px) {
+  .landing-page {
+    flex-direction: column-reverse;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .landing-content {
+    padding-right: 0;
+    margin-top: 20px;
+  }
+
+  .landing-title {
+    font-size: 2.5rem;
+  }
+
+  .landing-actions {
+    align-items: center;
+  }
+  
+  .landing-image-container {
+    flex: 0 0 auto;
+    height: 50vh;
+  }
+}

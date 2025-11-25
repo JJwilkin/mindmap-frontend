@@ -372,7 +372,8 @@ const ZoomableCanvas = () => {
         // Create high-level subject dots
         const highLevelCenterX = window.innerWidth / 2;
         const highLevelCenterY = window.innerHeight / 2;
-        const subjectSpacing = Math.min(window.innerWidth, window.innerHeight) * 0.3;
+        // Increased spacing to spread dots further apart
+        const subjectSpacing = Math.min(window.innerWidth, window.innerHeight) * 0.38; 
         const highLevelAngleStep = (2 * Math.PI) / subjectsData.length;
         
         const highLevelSubjectDots = subjectsData.map((subject, index) => {
@@ -382,7 +383,9 @@ const ZoomableCanvas = () => {
             x = highLevelCenterX;
             y = highLevelCenterY;
           } else {
-            const angle = index * highLevelAngleStep;
+            // Add -Math.PI/2 to start from top (12 o'clock) instead of right (3 o'clock)
+            // or simply keep as is. The screenshot shows nice distribution.
+            const angle = index * highLevelAngleStep - Math.PI / 2;
             x = highLevelCenterX + Math.cos(angle) * subjectSpacing;
             y = highLevelCenterY + Math.sin(angle) * subjectSpacing;
           }
@@ -405,6 +408,23 @@ const ZoomableCanvas = () => {
             isParent: true,
             level: 0
           };
+        });
+
+        // Add central Computer Science text node (no dot)
+        highLevelSubjectDots.push({
+          id: 'cs-central-node',
+          originalId: 'cs-central',
+          x: highLevelCenterX,
+          y: highLevelCenterY,
+          size: 0, // Size 0 effectively hides the dot
+          text: 'Computer Science',
+          details: 'The study of computation, information, and automation.',
+          fullContent: 'Computer science is the study of computation, information, and automation. Computer science spans theoretical disciplines (such as algorithms, theory of computation, and information theory) to applied disciplines (including the design and implementation of hardware and software).',
+          color: 'transparent', // Transparent color
+          isHighLevel: false,
+          isParent: true,
+          level: -1,
+          isTextOnly: true // Flag to identify this as a text-only node
         });
         
         setHighLevelDots(highLevelSubjectDots);
@@ -1145,10 +1165,10 @@ const ZoomableCanvas = () => {
           }));
         }
         
-        // Sort: text matches first, then semantic by score
+        // Sort: semantic matches first (by score), then text matches
         combinedResults.sort((a, b) => {
-          if (a.matchType === 'text' && b.matchType !== 'text') return -1;
-          if (a.matchType !== 'text' && b.matchType === 'text') return 1;
+          if (a.matchType === 'semantic' && b.matchType !== 'semantic') return -1;
+          if (a.matchType !== 'semantic' && b.matchType === 'semantic') return 1;
           if (a.matchType === 'semantic' && b.matchType === 'semantic') {
             return (b.score || 0) - (a.score || 0);
           }
@@ -2212,11 +2232,13 @@ const ZoomableCanvas = () => {
             const isHovered = hoveredDot?.id === dot.id;
             
             // For high-level subjects (no selectedSubject), don't use proximity labels
-            const isHighLevelSubject = !selectedSubject && !dot.parentId;
+            // Unless it's the central text-only node
+            const isHighLevelSubject = !selectedSubject && !dot.parentId && !dot.isTextOnly;
+            const isCentralTextNode = !selectedSubject && dot.isTextOnly;
             
             // Show proximity label if:
             // 1. NOT a high-level subject AND (within proximity radius OR subtopic OR hovered)
-            const showProximityLabel = !isHighLevelSubject && (
+            const showProximityLabel = !isHighLevelSubject && !isCentralTextNode && (
               proximityOpacity > 0 ||
               isSubtopic ||
               isHovered
@@ -2239,13 +2261,34 @@ const ZoomableCanvas = () => {
                   left: dot.x,
                   top: dot.y,
                   transform: `translate(-50%, -50%)`,
-                  zIndex: Math.round(dot.size * 100),
+                  zIndex: isCentralTextNode ? 50 : Math.round(dot.size * 100), // Lower z-index for central text so dots can float over if needed
                   pointerEvents: 'all',
                 }}
                 onClick={() => handleDotClick(dot)}
                 onMouseEnter={() => setHoveredDot(dot)}
                 onMouseLeave={() => setHoveredDot(null)}
               >
+                {/* Central Text Node - Big, static text */}
+                {isCentralTextNode && (
+                  <div 
+                    className="absolute text-white font-bold pointer-events-none text-center"
+                    style={{
+                      top: '50%',
+                      left: '50%',
+                      transform: `translate(-50%, -50%) scale(${isHovered ? 1.05 : 1})`,
+                      opacity: 1,
+                      textShadow: '0 0 30px rgba(255, 255, 255, 0.2)',
+                      whiteSpace: 'nowrap',
+                      transition: 'transform 0.3s ease-out',
+                      fontSize: `${Math.max(24, Math.min(48, 36 / scale))}px`, // Much larger font size
+                      color: '#ffffff',
+                      letterSpacing: '0.05em'
+                    }}
+                  >
+                    {dot.text}
+                  </div>
+                )}
+
                 {/* Proximity label - fades in as cursor gets closer (only for non-high-level subjects) */}
                 {showProximityLabel && (
                   <div 
@@ -2273,7 +2316,7 @@ const ZoomableCanvas = () => {
                   <div 
                     className="absolute text-white font-bold pointer-events-none"
                     style={{
-                      top: `${-scaledSize / 2 - (isHovered ? 14 : 10)}px`,
+                      top: `${-scaledSize / 2 - (isHovered ? 25 : 20)}px`, // Increased distance from dot
                       left: '50%',
                       transform: `translateX(-50%) scale(${isHovered ? 1.15 : 1})`,
                       opacity: 1,
