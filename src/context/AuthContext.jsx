@@ -14,6 +14,8 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false); // Indicates auth initialization is complete
+  const [justLoggedIn, setJustLoggedIn] = useState(false); // Indicates user just completed OAuth
 
   // Get the auth token from localStorage
   const getToken = () => {
@@ -72,24 +74,35 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // Check if we just returned from OAuth with a token
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    
-    if (token) {
-      console.log('✓ JWT token received from OAuth');
-      // Save token to localStorage
-      setToken(token);
+    const initializeAuth = async () => {
+      // Check if we just returned from OAuth with a token
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
       
-      // Remove token from URL for security
-      window.history.replaceState({}, document.title, window.location.pathname);
+      if (token) {
+        console.log('✓ JWT token received from OAuth');
+        // Save token to localStorage
+        setToken(token);
+        
+        // Remove token from URL for security
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Check auth with the new token
+        await checkAuth();
+        
+        // Signal that user just logged in (triggers data refresh in components)
+        setJustLoggedIn(true);
+        console.log('✓ OAuth complete, triggering data refresh');
+      } else {
+        // Check existing token
+        await checkAuth();
+      }
       
-      // Check auth with the new token
-      checkAuth();
-    } else {
-      // Check existing token
-      checkAuth();
-    }
+      // Mark auth initialization as complete
+      setAuthReady(true);
+    };
+
+    initializeAuth();
     
     // Listen for storage events (when user logs in from another tab)
     const handleStorageChange = (e) => {
@@ -129,9 +142,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Clear the justLoggedIn flag (call after handling the login event)
+  const clearJustLoggedIn = () => {
+    setJustLoggedIn(false);
+  };
+
   const value = {
     user,
     loading,
+    authReady,      // True when initial auth check is complete
+    justLoggedIn,   // True when user just completed OAuth redirect
+    clearJustLoggedIn,
     login,
     logout,
     checkAuth,
