@@ -60,7 +60,7 @@ const ZoomableCanvas = () => {
   const [isResizingChat, setIsResizingChat] = useState(false);
   
   // Authentication
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Function to load local JSON data
@@ -1349,12 +1349,19 @@ const ZoomableCanvas = () => {
         text: msg.text
       }));
 
+      const token = getToken();
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add Authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(getApiEndpoint('/api/chat'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+        headers: headers,
         body: JSON.stringify({
           topic: selectedDot.text,
           question: question,

@@ -15,17 +15,40 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Get the auth token from localStorage
+  const getToken = () => {
+    return localStorage.getItem('authToken');
+  };
+
+  // Set the auth token in localStorage
+  const setToken = (token) => {
+    if (token) {
+      localStorage.setItem('authToken', token);
+    } else {
+      localStorage.removeItem('authToken');
+    }
+  };
+
   const checkAuth = async () => {
     try {
+      const token = getToken();
+      if (!token) {
+        console.log('No auth token found');
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(getApiEndpoint('/api/auth/user'), {
-        credentials: 'include',
         headers: {
           'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
       
       if (!response.ok) {
         console.warn('Auth check failed:', response.status, response.statusText);
+        setToken(null); // Clear invalid token
         setUser(null);
         setLoading(false);
         return;
@@ -33,9 +56,15 @@ export const AuthProvider = ({ children }) => {
       
       const data = await response.json();
       console.log('Auth check result:', data.user ? 'Logged in' : 'Not logged in');
+      
+      if (!data.user) {
+        setToken(null); // Clear invalid token
+      }
+      
       setUser(data.user);
     } catch (error) {
       console.error('Error checking auth:', error);
+      setToken(null); // Clear token on error
       setUser(null);
     } finally {
       setLoading(false);
@@ -43,39 +72,36 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // Check if we just returned from OAuth (auth=success in URL)
+    // Check if we just returned from OAuth with a token
     const urlParams = new URLSearchParams(window.location.search);
-    const authSuccess = urlParams.get('auth');
+    const token = urlParams.get('token');
     
-    if (authSuccess === 'success') {
-      // Remove the auth parameter from URL
+    if (token) {
+      console.log('✓ JWT token received from OAuth');
+      // Save token to localStorage
+      setToken(token);
+      
+      // Remove token from URL for security
       window.history.replaceState({}, document.title, window.location.pathname);
       
-      // Wait a moment for the cookie to be set, then check auth
-      setTimeout(() => {
-        checkAuth();
-      }, 100);
+      // Check auth with the new token
+      checkAuth();
     } else {
+      // Check existing token
       checkAuth();
     }
     
     // Listen for storage events (when user logs in from another tab)
-    const handleStorageChange = () => {
-      checkAuth();
+    const handleStorageChange = (e) => {
+      if (e.key === 'authToken') {
+        checkAuth();
+      }
     };
     
     window.addEventListener('storage', handleStorageChange);
     
-    // Also check auth when window regains focus (after OAuth redirect)
-    const handleFocus = () => {
-      checkAuth();
-    };
-    
-    window.addEventListener('focus', handleFocus);
-    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleFocus);
     };
   }, []);
 
@@ -86,10 +112,18 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await fetch(getApiEndpoint('/api/auth/logout'), {
-        credentials: 'include',
-      });
+      // Clear the token
+      setToken(null);
       setUser(null);
+      
+      // Notify backend (optional, mainly for logging)
+      await fetch(getApiEndpoint('/api/auth/logout'), {
+        headers: {
+          'Authorization': `Bearer ${getToken()}`,
+        },
+      });
+      
+      console.log('✓ Logged out successfully');
     } catch (error) {
       console.error('Error logging out:', error);
     }
@@ -101,6 +135,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     checkAuth,
+    getToken, // Expose getToken for API calls
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
