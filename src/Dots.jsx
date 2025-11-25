@@ -183,9 +183,8 @@ const ZoomableCanvas = () => {
     };
   }, [isResizingChat, chatWidth]);
 
-  // Fetch subjects from API or use local data
-  useEffect(() => {
-    const fetchSubjects = async () => {
+  // Function to fetch and process subjects data
+  const fetchSubjects = async () => {
       // Local testing mode - skip API call
       if (USE_LOCAL_DATA) {
         try {
@@ -428,11 +427,13 @@ const ZoomableCanvas = () => {
           setLoading(false);
         } catch (fallbackError) {
           console.error('Fallback also failed:', fallbackError);
-          setLoading(false);
-        }
+        setLoading(false);
       }
-    };
+    }
+  };
 
+  // Initial fetch on mount
+  useEffect(() => {
     fetchSubjects();
   }, []);
 
@@ -440,138 +441,7 @@ const ZoomableCanvas = () => {
   useEffect(() => {
     if (justLoggedIn) {
       console.log('🔄 OAuth redirect detected, refetching subjects...');
-      
-      const refetchData = async () => {
-        try {
-          setLoading(true);
-          const response = await fetch(getApiEndpoint('/api/subjects'));
-          if (!response.ok) {
-            throw new Error('Failed to fetch subjects');
-          }
-          const subjectsData = await response.json();
-          console.log('📡 Refetched subjects after OAuth:', subjectsData.length, 'subjects');
-          
-          // Process subjects (same logic as initial load)
-          setSubjects(subjectsData);
-          
-          // Process all subjects for display
-          const canvasCenterX = window.innerWidth / 2;
-          const canvasCenterY = window.innerHeight / 2;
-          const clusterSpacing = Math.min(window.innerWidth, window.innerHeight) * 0.6;
-          const clusterAngleStep = (2 * Math.PI) / subjectsData.length;
-          
-          const allProcessedDots = [];
-          const allHierarchicalLines = [];
-          const allConnectionLines = [];
-          const allPathsData = [];
-          
-          subjectsData.forEach((subject, subjectIndex) => {
-            const angle = subjectIndex * clusterAngleStep;
-            const clusterOffsetX = Math.cos(angle) * clusterSpacing;
-            const clusterOffsetY = Math.sin(angle) * clusterSpacing;
-            
-            const evaluatePosition = (expr, isX = true) => {
-              if (typeof expr === 'number') {
-                return subjectIndex === 0 ? expr : (isX ? expr + clusterOffsetX : expr + clusterOffsetY);
-              }
-              if (typeof expr === 'string') {
-                let baseValue;
-                if (isX) {
-                  baseValue = eval(expr.replace('centerX', canvasCenterX).replace('centerY', canvasCenterY));
-                  return subjectIndex === 0 ? baseValue : baseValue + clusterOffsetX;
-                } else {
-                  baseValue = eval(expr.replace('centerX', canvasCenterX).replace('centerY', canvasCenterY));
-                  return subjectIndex === 0 ? baseValue : baseValue + clusterOffsetY;
-                }
-              }
-              return 0;
-            };
-
-            const idPrefix = `${subject.slug}-`;
-            
-            const processDots = (dotsArray, parentId = null, level = 0, subjectId = subject._id) => {
-              return dotsArray.flatMap(dot => {
-                const processedDot = {
-                  ...dot,
-                  id: idPrefix + dot.id,
-                  x: evaluatePosition(dot.x, true),
-                  y: evaluatePosition(dot.y, false),
-                  parent: parentId ? idPrefix + parentId : null,
-                  subjectId: subjectId,
-                  subjectSlug: subject.slug,
-                  level: level
-                };
-                const childDots = dot.children ? processDots(dot.children, dot.id, level + 1, subjectId) : [];
-                return [processedDot, ...childDots];
-              });
-            };
-            
-            const processedDots = processDots(subject.dots || []);
-            allProcessedDots.push(...processedDots);
-            
-            // Process lines
-            if (subject.lines?.hierarchical) {
-              subject.lines.hierarchical.forEach(line => {
-                allHierarchicalLines.push({
-                  from: idPrefix + line.from,
-                  to: idPrefix + line.to
-                });
-              });
-            }
-            if (subject.lines?.connections) {
-              subject.lines.connections.forEach(line => {
-                allConnectionLines.push({
-                  from: idPrefix + line.from,
-                  to: idPrefix + line.to
-                });
-              });
-            }
-            
-            // Process paths
-            if (subject.paths) {
-              subject.paths.forEach(path => {
-                allPathsData.push({
-                  ...path,
-                  steps: path.steps.map(stepId => idPrefix + stepId),
-                  subjectSlug: subject.slug
-                });
-              });
-            }
-          });
-          
-          setAllDots(allProcessedDots);
-          setAllLines({ hierarchical: allHierarchicalLines, connections: allConnectionLines });
-          setAllPaths(allPathsData);
-          
-          // Create high-level dots
-          const highLevelDotsData = subjectsData.map((subject, index) => {
-            const angle = index * clusterAngleStep;
-            return {
-              id: `subject-${subject.slug}`,
-              text: subject.name,
-              x: canvasCenterX + Math.cos(angle) * (clusterSpacing * 0.5),
-              y: canvasCenterY + Math.sin(angle) * (clusterSpacing * 0.5),
-              level: 0,
-              isHighLevel: true,
-              subjectSlug: subject.slug,
-              subjectId: subject._id
-            };
-          });
-          setHighLevelDots(highLevelDotsData);
-          
-          // Set initial dots and lines for high-level view
-          setDots(highLevelDotsData);
-          setLines({ hierarchical: [], connections: [] });
-          
-          setLoading(false);
-          console.log('✓ Data refetch complete after OAuth');
-        } catch (error) {
-          console.error('Error refetching subjects after OAuth:', error);
-          setLoading(false);
-        }
-      };
-      
-      refetchData();
+      fetchSubjects();
       clearJustLoggedIn(); // Clear the flag so this only runs once
     }
   }, [justLoggedIn, clearJustLoggedIn]);
