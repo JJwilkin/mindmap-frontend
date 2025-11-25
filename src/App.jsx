@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Analytics } from "@vercel/analytics/react";
 import Graph from "./Graph";
 import ZoomableGraph from "./Dots";
 // import ZoomableGraph from "./Interactive";
@@ -29,6 +30,7 @@ function App() {
           <Route path="/app" element={<MainApp />} />
         </Routes>
       </Router>
+      <Analytics />
     </AuthProvider>
   );
 }
