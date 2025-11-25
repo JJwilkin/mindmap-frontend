@@ -446,65 +446,6 @@ const ZoomableCanvas = () => {
     }
   }, [justLoggedIn, clearJustLoggedIn]);
 
-  // Sync URL with current selection state
-  useEffect(() => {
-    const params = new URLSearchParams();
-    
-    if (selectedSubject?.slug) {
-      params.set('subject', selectedSubject.slug);
-    }
-    
-    if (selectedDot?.originalId) {
-      params.set('topic', selectedDot.originalId);
-    }
-    
-    const newUrl = params.toString() 
-      ? `${window.location.pathname}?${params.toString()}`
-      : window.location.pathname;
-    
-    // Only update if URL actually changed
-    if (window.location.search !== (params.toString() ? `?${params.toString()}` : '')) {
-      window.history.replaceState({}, '', newUrl);
-    }
-  }, [selectedSubject, selectedDot]);
-
-  // Read URL params on mount and navigate to subject/topic
-  const urlProcessed = useRef(false);
-  useEffect(() => {
-    // Only process once, after subjects (and their dots) are loaded
-    if (urlProcessed.current || loading || (subjects.length === 0 && !USE_LOCAL_DATA)) return;
-    
-    const params = new URLSearchParams(window.location.search);
-    const subjectSlug = params.get('subject');
-    const topicId = params.get('topic');
-    
-    if (!subjectSlug) {
-      urlProcessed.current = true;
-      return;
-    }
-    
-    console.log('🔗 URL params detected - subject:', subjectSlug, 'topic:', topicId);
-    
-    // Find the high-level dot for this subject
-    const subjectDot = highLevelDots.find(d => d.subjectSlug === subjectSlug);
-    
-    if (subjectDot) {
-      urlProcessed.current = true;
-      
-      // Navigate to the subject first
-      if (topicId) {
-        // Set pending dot selection before clicking the subject
-        setPendingDotSelection(topicId);
-        pendingDotProcessed.current = false;
-      }
-      
-      // Simulate clicking on the subject dot
-      handleDotClick(subjectDot);
-    } else {
-      console.warn('⚠️ Subject not found for slug:', subjectSlug);
-    }
-  }, [loading, subjects, highLevelDots, USE_LOCAL_DATA]);
-
   const handleWheel = (e) => {
     e.preventDefault();
 
